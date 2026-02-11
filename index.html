@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Release Delivery Portal</title>
+<style>
+body {background:#0b0b0b;color:white;font-family:Arial;margin:0;padding:20px;}
+.container {max-width:800px;margin:auto;background:#151515;padding:30px;border-radius:12px;}
+h1 {text-align:center;}
+input, select, button {
+  width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none;
+}
+input {background:#222;color:white;}
+button {background:#00ff99;color:black;font-weight:bold;cursor:pointer;}
+.track {border:1px solid #333;padding:15px;margin-top:15px;border-radius:10px;}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>Release Upload</h1>
+
+<form action="https://formspree.io/f/YOURCODE" method="POST" enctype="multipart/form-data">
+
+<label>Release Type</label>
+<select id="releaseType" name="release_type" required>
+  <option value="">Select</option>
+  <option value="Single">Single</option>
+  <option value="EP">EP</option>
+  <option value="Album">Album</option>
+</select>
+
+<div id="tracksContainer"></div>
+
+<label>Cover Artwork (3000x3000)</label>
+<input type="file" name="cover_art" required>
+
+<button type="button" onclick="addTrack()">+ Add Another Track</button>
+<button type="submit">Submit Release</button>
+
+</form>
+</div>
+
+<script>
+let trackCount = 0;
+
+function addTrack() {
+  trackCount++;
+  const container = document.getElementById('tracksContainer');
+  const div = document.createElement('div');
+  div.className = "track";
+  div.innerHTML = `
+    <label>Track Title</label>
+    <input type="text" name="track_title_${trackCount}" required>
+
+    <label>Version Name (Original, Slowed, Remix, etc.)</label>
+    <input type="text" name="version_${trackCount}" required>
+
+    <label>Audio File</label>
+    <input type="file" name="audio_${trackCount}" required>
+  `;
+  container.appendChild(div);
+}
+
+document.getElementById('releaseType').addEventListener('change', function() {
+  const container = document.getElementById('tracksContainer');
+  container.innerHTML = "";
+  trackCount = 0;
+
+  if (this.value === "Single") {
+    addTrack();
+    document.querySelector('button[onclick="addTrack()"]').style.display = "none";
+  } else {
+    addTrack();
+    document.querySelector('button[onclick="addTrack()"]').style.display = "block";
+  }
+});
+</script>
+
+</body>
+</html>
