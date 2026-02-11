@@ -99,22 +99,19 @@ function uploadFile(file, container, isImage=false) {
     xhr.onload = () => {
   const res = JSON.parse(xhr.responseText);
 
+  // Use the secure_url directly (ALWAYS WORKS)
+  const fileUrl = res.secure_url;
+
   if (isImage) {
     const img = document.createElement("img");
-
-    // Force correct image delivery URL
-    const publicId = res.public_id;
-    const format = res.format;
-
-    img.src = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${publicId}.${format}`;
-
+    img.src = fileUrl;
     img.style.width = "100%";
     img.style.marginTop = "10px";
     img.style.borderRadius = "8px";
     container.appendChild(img);
   }
 
-  resolve(res.secure_url);
+  resolve(fileUrl);
 };
 
     xhr.open("POST", url);
