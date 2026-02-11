@@ -7,12 +7,12 @@
 body {background:#0b0b0b;color:white;font-family:Arial;margin:0;padding:20px;}
 .container {max-width:800px;margin:auto;background:#151515;padding:30px;border-radius:12px;}
 h1 {text-align:center;}
-input, select, button {
-  width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none;
-}
+input, select, button {width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none;}
 input {background:#222;color:white;}
 button {background:#00ff99;color:black;font-weight:bold;cursor:pointer;}
 .track {border:1px solid #333;padding:15px;margin-top:15px;border-radius:10px;}
+.progressBar {height:8px;background:#333;margin-top:6px;border-radius:4px;}
+.progressFill {height:100%;width:0;background:#00ff99;border-radius:4px;}
 </style>
 </head>
 <body>
@@ -20,10 +20,10 @@ button {background:#00ff99;color:black;font-weight:bold;cursor:pointer;}
 <div class="container">
 <h1>Release Upload</h1>
 
-<form action="https://formspree.io/f/YOURCODE" method="POST" enctype="multipart/form-data">
+<form id="releaseForm">
 
 <label>Release Type</label>
-<select id="releaseType" name="release_type" required>
+<select id="releaseType" required>
   <option value="">Select</option>
   <option value="Single">Single</option>
   <option value="EP">EP</option>
@@ -33,127 +33,122 @@ button {background:#00ff99;color:black;font-weight:bold;cursor:pointer;}
 <div id="tracksContainer"></div>
 
 <label>Cover Artwork (3000x3000)</label>
-<input type="file" name="cover_art" required>
+<input type="file" id="coverArt" required>
 
-<button type="button" onclick="addTrack()">+ Add Another Track</button>
-<button type="submit">Submit Release</button>
+<button type="button" id="addTrackBtn" onclick="addTrack()">+ Add Another Track</button>
+<button type="submit" id="submitBtn">Upload Files</button>
 
 </form>
 </div>
 
 <script>
+const CLOUD_NAME = "yourcloudname";
+const UPLOAD_PRESET = "yourpreset";
 let trackCount = 0;
+let uploadedLinks = "";
 
 function addTrack() {
   trackCount++;
-  const container = document.getElementById('tracksContainer');
   const div = document.createElement('div');
   div.className = "track";
   div.innerHTML = `
     <label>Track Title</label>
-    <input type="text" name="track_title_${trackCount}" required>
+    <input type="text" required>
 
-    <label>Version Name (Original, Slowed, Remix, etc.)</label>
-    <input type="text" name="version_${trackCount}">
+    <label>Version Name (optional)</label>
+    <input type="text">
 
     <label>Audio File</label>
-    <input type="file" name="audio_${trackCount}" required>
+    <input type="file" class="audioFile" required>
   `;
-  container.appendChild(div);
+  document.getElementById('tracksContainer').appendChild(div);
 }
 
 document.getElementById('releaseType').addEventListener('change', function() {
   const container = document.getElementById('tracksContainer');
   container.innerHTML = "";
   trackCount = 0;
-
-  if (this.value === "Single") {
-    addTrack();
-    document.querySelector('button[onclick="addTrack()"]').style.display = "none";
-  } else {
-    addTrack();
-    document.querySelector('button[onclick="addTrack()"]').style.display = "block";
-  }
+  addTrack();
+  document.getElementById("addTrackBtn").style.display =
+    this.value === "Single" ? "none" : "block";
 });
-</script>
-  <script>
-const CLOUD_NAME = "yourcloudname";
-const UPLOAD_PRESET = "yourpreset";
 
-function createProgressBar(container) {
-  const bar = document.createElement("div");
-  bar.style.height = "8px";
-  bar.style.background = "#333";
-  bar.style.marginTop = "8px";
-  bar.style.borderRadius = "4px";
+function uploadFile(file, container, isImage=false) {
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+    const url = isImage
+      ? `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`
+      : `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`;
 
-  const progress = document.createElement("div");
-  progress.style.height = "100%";
-  progress.style.width = "0%";
-  progress.style.background = "#00ff99";
-  progress.style.borderRadius = "4px";
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
 
-  bar.appendChild(progress);
-  container.appendChild(bar);
-  return progress;
+    const bar = document.createElement("div");
+    bar.className = "progressBar";
+    const fill = document.createElement("div");
+    fill.className = "progressFill";
+    bar.appendChild(fill);
+    container.appendChild(bar);
+
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable)
+        fill.style.width = (e.loaded / e.total * 100) + "%";
+    };
+
+    xhr.onload = () => {
+      const res = JSON.parse(xhr.responseText);
+      if (isImage) {
+        const img = document.createElement("img");
+        img.src = res.secure_url;
+        img.style.width = "100%";
+        img.style.marginTop = "10px";
+        container.appendChild(img);
+      }
+      resolve(res.secure_url);
+    };
+
+    xhr.open("POST", url);
+    xhr.send(formData);
+  });
 }
 
-function uploadFile(file, container, preview=false) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    const url = preview
-  ? `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`
-  : `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`;
-
-    const form = document.querySelector("form");
-let uploadedLinks = "";
-
-form.addEventListener("submit", async function(e) {
+document.getElementById("releaseForm").addEventListener("submit", async e => {
   e.preventDefault();
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.innerText = "Uploading...";
 
-  const submitBtn = form.querySelector("button[type='submit']");
-  submitBtn.disabled = true;
-  submitBtn.innerText = "Uploading Files...";
+  uploadedLinks = "";
 
-  const fileInputs = document.querySelectorAll("input[type='file']");
-
-  for (let input of fileInputs) {
-    const container = input.parentElement;
-
-    for (let file of input.files) {
-      const size = (file.size / 1024 / 1024).toFixed(2);
-      const info = document.createElement("div");
-      info.innerText = `Uploading (${size} MB)...`;
-      container.appendChild(info);
-
-      const isArtwork = input.name.includes("cover");
-      const url = await uploadFile(file, container, isArtwork);
-      uploadedLinks += url + "\n";
-
-      input.value = "";
-    }
+  const audioInputs = document.querySelectorAll(".audioFile");
+  for (let input of audioInputs) {
+    const file = input.files[0];
+    const url = await uploadFile(file, input.parentElement, false);
+    uploadedLinks += url + "\n";
   }
 
-  submitBtn.innerText = "Send Release 🚀";
-  submitBtn.disabled = false;
+  const cover = document.getElementById("coverArt").files[0];
+  const coverUrl = await uploadFile(cover, document.getElementById("coverArt").parentElement, true);
+  uploadedLinks += coverUrl;
 
-  submitBtn.onclick = async () => {
-    submitBtn.innerText = "Sending...";
-    submitBtn.disabled = true;
+  btn.innerText = "Send Release 🚀";
+  btn.disabled = false;
 
-    const emailData = new FormData();
-    emailData.append("file_links", uploadedLinks);
-    emailData.append("release_type", document.getElementById("releaseType").value);
+  btn.onclick = async () => {
+    btn.innerText = "Sending...";
+    btn.disabled = true;
 
-    await fetch("https://formspree.io/f/YOURCODE", {
-      method: "POST",
-      body: emailData
-    });
+    const data = new FormData();
+    data.append("file_links", uploadedLinks);
+    data.append("release_type", document.getElementById("releaseType").value);
 
-    submitBtn.innerText = "Submitted ✅";
+    await fetch("https://formspree.io/f/YOURCODE", { method:"POST", body:data });
+
+    btn.innerText = "Submitted ✅";
   };
 });
-  </script>
+</script>
 
 </body>
 </html>
