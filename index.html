@@ -123,7 +123,7 @@ img {
 </div>
 
 <script>
-const CLOUD_NAME = "djpeitfan";
+const CLOUD_NAME = "djpeittan";
 const UPLOAD_PRESET = "label_upload";
 let trackCount = 0;
 let uploadedLinks = "";
@@ -147,12 +147,19 @@ function addTrack() {
 
 document.getElementById('releaseType').addEventListener('change', function() {
   const container = document.getElementById('tracksContainer');
-  while (container.firstChild) {
+
+  // reset counter
   trackCount = 0;
+
+  // clear old tracks
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
+
+  // always add one track
   addTrack();
+
+  // hide add button for Single
   document.getElementById("addTrackBtn").style.display =
     this.value === "Single" ? "none" : "block";
 });
