@@ -54,7 +54,7 @@ function addTrack() {
     <input type="text" name="track_title_${trackCount}" required>
 
     <label>Version Name (Original, Slowed, Remix, etc.)</label>
-    <input type="text" name="version_${trackCount}"
+    <input type="text" name="version_${trackCount}">
 
     <label>Audio File</label>
     <input type="file" name="audio_${trackCount}" required>
@@ -95,7 +95,6 @@ function createProgressBar(container) {
 
   bar.appendChild(progress);
   container.appendChild(bar);
-
   return progress;
 }
 
@@ -110,25 +109,22 @@ function uploadFile(file, container, preview=false) {
 
     const progressBar = createProgressBar(container);
 
-    xhr.upload.addEventListener("progress", e => {
+    xhr.upload.onprogress = e => {
       if (e.lengthComputable) {
-        const percent = (e.loaded / e.total) * 100;
-        progressBar.style.width = percent + "%";
+        progressBar.style.width = (e.loaded / e.total * 100) + "%";
       }
-    });
+    };
 
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        const res = JSON.parse(xhr.responseText);
-        if (preview) {
-          const img = document.createElement("img");
-          img.src = res.secure_url;
-          img.style.width = "100%";
-          img.style.marginTop = "10px";
-          container.appendChild(img);
-        }
-        resolve(res.secure_url);
+    xhr.onload = () => {
+      const res = JSON.parse(xhr.responseText);
+      if (preview) {
+        const img = document.createElement("img");
+        img.src = res.secure_url;
+        img.style.width = "100%";
+        img.style.marginTop = "10px";
+        container.appendChild(img);
       }
+      resolve(res.secure_url);
     };
 
     xhr.open("POST", url, true);
@@ -138,32 +134,42 @@ function uploadFile(file, container, preview=false) {
 
 document.querySelector("form").addEventListener("submit", async function(e) {
   e.preventDefault();
-  const files = document.querySelectorAll("input[type='file']");
+
+  const submitBtn = e.target.querySelector("button[type='submit']");
+  submitBtn.disabled = true;
+  submitBtn.innerText = "Uploading...";
+
   let links = "";
 
-  for (let input of files) {
+  const fileInputs = document.querySelectorAll("input[type='file']");
+
+  for (let input of fileInputs) {
     const container = input.parentElement;
+
     for (let file of input.files) {
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      const sizeText = document.createElement("div");
-      sizeText.innerText = `File size: ${sizeMB} MB`;
-      container.appendChild(sizeText);
+      const size = (file.size / 1024 / 1024).toFixed(2);
+      const info = document.createElement("div");
+      info.innerText = `Uploading (${size} MB)...`;
+      container.appendChild(info);
 
       const isArtwork = input.name.includes("cover");
       const url = await uploadFile(file, container, isArtwork);
       links += url + "\n";
+
+      input.value = ""; // ⭐ prevents re-upload
     }
   }
 
   const emailData = new FormData();
   emailData.append("file_links", links);
+  emailData.append("release_type", document.getElementById("releaseType").value);
 
   await fetch("https://formspree.io/f/YOURCODE", {
     method: "POST",
     body: emailData
   });
 
-  alert("Upload Complete 🚀");
+  submitBtn.innerText = "Upload Complete ✅";
 });
   </script>
 
