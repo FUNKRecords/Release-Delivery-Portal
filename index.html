@@ -101,45 +101,19 @@ function createProgressBar(container) {
 function uploadFile(file, container, preview=false) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+    const url = preview
+  ? `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`
+  : `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
+    const form = document.querySelector("form");
+let uploadedLinks = "";
 
-    const progressBar = createProgressBar(container);
-
-    xhr.upload.onprogress = e => {
-      if (e.lengthComputable) {
-        progressBar.style.width = (e.loaded / e.total * 100) + "%";
-      }
-    };
-
-    xhr.onload = () => {
-      const res = JSON.parse(xhr.responseText);
-      if (preview) {
-        const img = document.createElement("img");
-        img.src = res.secure_url;
-        img.style.width = "100%";
-        img.style.marginTop = "10px";
-        container.appendChild(img);
-      }
-      resolve(res.secure_url);
-    };
-
-    xhr.open("POST", url, true);
-    xhr.send(formData);
-  });
-}
-
-document.querySelector("form").addEventListener("submit", async function(e) {
+form.addEventListener("submit", async function(e) {
   e.preventDefault();
 
-  const submitBtn = e.target.querySelector("button[type='submit']");
+  const submitBtn = form.querySelector("button[type='submit']");
   submitBtn.disabled = true;
-  submitBtn.innerText = "Uploading...";
-
-  let links = "";
+  submitBtn.innerText = "Uploading Files...";
 
   const fileInputs = document.querySelectorAll("input[type='file']");
 
@@ -154,22 +128,30 @@ document.querySelector("form").addEventListener("submit", async function(e) {
 
       const isArtwork = input.name.includes("cover");
       const url = await uploadFile(file, container, isArtwork);
-      links += url + "\n";
+      uploadedLinks += url + "\n";
 
-      input.value = ""; // ⭐ prevents re-upload
+      input.value = "";
     }
   }
 
-  const emailData = new FormData();
-  emailData.append("file_links", links);
-  emailData.append("release_type", document.getElementById("releaseType").value);
+  submitBtn.innerText = "Send Release 🚀";
+  submitBtn.disabled = false;
 
-  await fetch("https://formspree.io/f/YOURCODE", {
-    method: "POST",
-    body: emailData
-  });
+  submitBtn.onclick = async () => {
+    submitBtn.innerText = "Sending...";
+    submitBtn.disabled = true;
 
-  submitBtn.innerText = "Upload Complete ✅";
+    const emailData = new FormData();
+    emailData.append("file_links", uploadedLinks);
+    emailData.append("release_type", document.getElementById("releaseType").value);
+
+    await fetch("https://formspree.io/f/YOURCODE", {
+      method: "POST",
+      body: emailData
+    });
+
+    submitBtn.innerText = "Submitted ✅";
+  };
 });
   </script>
 
