@@ -54,7 +54,7 @@ function addTrack() {
     <input type="text" name="track_title_${trackCount}" required>
 
     <label>Version Name (Original, Slowed, Remix, etc.)</label>
-    <input type="text" name="version_${trackCount}" required>
+    <input type="text" name="version_${trackCount}"
 
     <label>Audio File</label>
     <input type="file" name="audio_${trackCount}" required>
@@ -76,6 +76,96 @@ document.getElementById('releaseType').addEventListener('change', function() {
   }
 });
 </script>
+  <script>
+const CLOUD_NAME = "yourcloudname";
+const UPLOAD_PRESET = "yourpreset";
+
+function createProgressBar(container) {
+  const bar = document.createElement("div");
+  bar.style.height = "8px";
+  bar.style.background = "#333";
+  bar.style.marginTop = "8px";
+  bar.style.borderRadius = "4px";
+
+  const progress = document.createElement("div");
+  progress.style.height = "100%";
+  progress.style.width = "0%";
+  progress.style.background = "#00ff99";
+  progress.style.borderRadius = "4px";
+
+  bar.appendChild(progress);
+  container.appendChild(bar);
+
+  return progress;
+}
+
+function uploadFile(file, container, preview=false) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    const progressBar = createProgressBar(container);
+
+    xhr.upload.addEventListener("progress", e => {
+      if (e.lengthComputable) {
+        const percent = (e.loaded / e.total) * 100;
+        progressBar.style.width = percent + "%";
+      }
+    });
+
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        const res = JSON.parse(xhr.responseText);
+        if (preview) {
+          const img = document.createElement("img");
+          img.src = res.secure_url;
+          img.style.width = "100%";
+          img.style.marginTop = "10px";
+          container.appendChild(img);
+        }
+        resolve(res.secure_url);
+      }
+    };
+
+    xhr.open("POST", url, true);
+    xhr.send(formData);
+  });
+}
+
+document.querySelector("form").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const files = document.querySelectorAll("input[type='file']");
+  let links = "";
+
+  for (let input of files) {
+    const container = input.parentElement;
+    for (let file of input.files) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      const sizeText = document.createElement("div");
+      sizeText.innerText = `File size: ${sizeMB} MB`;
+      container.appendChild(sizeText);
+
+      const isArtwork = input.name.includes("cover");
+      const url = await uploadFile(file, container, isArtwork);
+      links += url + "\n";
+    }
+  }
+
+  const emailData = new FormData();
+  emailData.append("file_links", links);
+
+  await fetch("https://formspree.io/f/YOURCODE", {
+    method: "POST",
+    body: emailData
+  });
+
+  alert("Upload Complete 🚀");
+});
+  </script>
 
 </body>
 </html>
