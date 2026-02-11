@@ -42,8 +42,8 @@ button {background:#00ff99;color:black;font-weight:bold;cursor:pointer;}
 </div>
 
 <script>
-const CLOUD_NAME = "yourcloudname";
-const UPLOAD_PRESET = "yourpreset";
+const CLOUD_NAME = "djpeitfan";
+const UPLOAD_PRESET = "label_upload";
 let trackCount = 0;
 let uploadedLinks = "";
 
@@ -76,9 +76,7 @@ document.getElementById('releaseType').addEventListener('change', function() {
 function uploadFile(file, container, isImage=false) {
   return new Promise(resolve => {
     const xhr = new XMLHttpRequest();
-    const url = isImage
-      ? `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`
-      : `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`;
+    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
 
     const formData = new FormData();
     formData.append("file", file);
