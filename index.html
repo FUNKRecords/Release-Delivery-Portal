@@ -147,8 +147,11 @@ function addTrack() {
 
 document.getElementById('releaseType').addEventListener('change', function() {
   const container = document.getElementById('tracksContainer');
-  container.innerHTML = "";
+  while (container.firstChild) {
   trackCount = 0;
+  while (container.firstChild) {
+    container.removeChild(container.firstChild);
+  }
   addTrack();
   document.getElementById("addTrackBtn").style.display =
     this.value === "Single" ? "none" : "block";
@@ -228,8 +231,10 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
     data.append("file_links", uploadedLinks);
     data.append("release_type", document.getElementById("releaseType").value);
 
-    await fetch(https://formspree.io/f/mzzrkpqj", { method:"POST", body:data });
-
+    await fetch("https://formspree.io/f/mzzrkpqj", {
+  method: "POST",
+  body: data
+});
     btn.innerText = "Submitted ✅";
   };
 });
