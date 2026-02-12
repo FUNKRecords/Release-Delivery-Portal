@@ -140,9 +140,10 @@ function uploadFile(file, type, progressCallback) {
     const xhr = new XMLHttpRequest();
     const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
+    const data = new FormData();
+data.append("release_type", document.getElementById("releaseType").value);
+data.append("tracks", trackInfo);
+data.append("cover_art", coverUrl);
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && progressCallback) {
@@ -175,30 +176,35 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
   btn.innerText = "Uploading...";
 
   let fileLinks = "";
+let trackInfo = "";
 
-  const audioInputs = document.querySelectorAll(".audioFile");
+const tracks = document.querySelectorAll(".track");
 
-  for (let input of audioInputs) {
-    if (!input.files[0]) {
-      alert("Audio file missing");
-      btn.disabled = false;
-      btn.innerText = "Send Release 🚀";
-      return;
-    }
+for (let i = 0; i < tracks.length; i++) {
 
-    const audioUrl = await uploadFile(input.files[0], "audio", (percent) => {
-  btn.innerText = `Uploading Audio... ${percent}%`;
-});
-    if (!audioUrl) {
-      alert("Audio upload failed");
-      btn.disabled = false;
-      btn.innerText = "Send Release 🚀";
-      return;
-    }
+  const title = tracks[i].querySelectorAll("input")[0].value;
+  const version = tracks[i].querySelectorAll("input")[1].value;
+  const fileInput = tracks[i].querySelector(".audioFile");
 
-    fileLinks += audioUrl + "\n";
+  if (!fileInput.files[0]) {
+    alert("Audio file missing");
+    return;
   }
 
+  const audioUrl = await uploadFile(fileInput.files[0], "audio", (percent) => {
+    btn.innerText = `Uploading Audio... ${percent}%`;
+  });
+
+  if (!audioUrl) {
+    alert("Audio upload failed");
+    return;
+  }
+
+  trackInfo += `Track ${i + 1}:\n`;
+  trackInfo += `Title: ${title}\n`;
+  trackInfo += `Version: ${version || "Original"}\n`;
+  trackInfo += `Audio: ${audioUrl}\n\n`;
+                }
   const coverInput = document.getElementById("coverArt");
 
   if (!coverInput.files[0]) {
