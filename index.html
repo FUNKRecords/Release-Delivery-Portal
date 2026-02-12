@@ -107,6 +107,10 @@ img.preview {
 <script>
 const CLOUD_NAME = "djpeitfan";
 const UPLOAD_PRESET = "label_upload";
+  
+  window.onload = function() {
+  addTrack();
+};
 
 function addTrack() {
   const div = document.createElement('div');
@@ -125,7 +129,8 @@ function addTrack() {
 }
 
 document.getElementById('releaseType').addEventListener('change', function() {
-  document.getElementById('tracksContainer').innerHTML = "";
+  const container = document.getElementById('tracksContainer');
+  container.innerHTML = "";
   addTrack();
 });
 
