@@ -26,7 +26,6 @@ h1 {
   margin-bottom:25px;
   font-size:24px;
   font-weight:600;
-  letter-spacing:1.5px;
 }
 
 label {
@@ -71,11 +70,10 @@ button:hover {
   background:#00cc77;
 }
 
-img {
+img.preview {
+  width:100%;
   margin-top:15px;
   border-radius:12px;
-  max-height:280px;
-  object-fit:cover;
 }
 </style>
 </head>
@@ -127,8 +125,7 @@ function addTrack() {
 }
 
 document.getElementById('releaseType').addEventListener('change', function() {
-  const container = document.getElementById('tracksContainer');
-  container.innerHTML = "";
+  document.getElementById('tracksContainer').innerHTML = "";
   addTrack();
 });
 
@@ -140,10 +137,9 @@ function uploadFile(file, type, progressCallback) {
     const xhr = new XMLHttpRequest();
     const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
 
-    const data = new FormData();
-data.append("release_type", document.getElementById("releaseType").value);
-data.append("tracks", trackInfo);
-data.append("cover_art", coverUrl);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && progressCallback) {
@@ -166,7 +162,7 @@ data.append("cover_art", coverUrl);
     xhr.open("POST", url);
     xhr.send(formData);
   });
-  }
+}
 
 document.getElementById("releaseForm").addEventListener("submit", async e => {
   e.preventDefault();
@@ -175,65 +171,65 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
   btn.disabled = true;
   btn.innerText = "Uploading...";
 
-  let fileLinks = "";
-let trackInfo = "";
+  let trackInfo = "";
+  const tracks = document.querySelectorAll(".track");
 
-const tracks = document.querySelectorAll(".track");
+  for (let i = 0; i < tracks.length; i++) {
 
-for (let i = 0; i < tracks.length; i++) {
+    const title = tracks[i].querySelectorAll("input")[0].value;
+    const version = tracks[i].querySelectorAll("input")[1].value;
+    const fileInput = tracks[i].querySelector(".audioFile");
 
-  const title = tracks[i].querySelectorAll("input")[0].value;
-  const version = tracks[i].querySelectorAll("input")[1].value;
-  const fileInput = tracks[i].querySelector(".audioFile");
+    if (!fileInput.files[0]) {
+      alert("Audio file missing");
+      btn.disabled = false;
+      return;
+    }
 
-  if (!fileInput.files[0]) {
-    alert("Audio file missing");
-    return;
+    const audioUrl = await uploadFile(fileInput.files[0], "audio", (percent) => {
+      btn.innerText = `Uploading Audio... ${percent}%`;
+    });
+
+    if (!audioUrl) {
+      alert("Audio upload failed");
+      btn.disabled = false;
+      return;
+    }
+
+    trackInfo += `Track ${i + 1}:\n`;
+    trackInfo += `Title: ${title}\n`;
+    trackInfo += `Version: ${version || "Original"}\n`;
+    trackInfo += `Audio: ${audioUrl}\n\n`;
   }
 
-  const audioUrl = await uploadFile(fileInput.files[0], "audio", (percent) => {
-    btn.innerText = `Uploading Audio... ${percent}%`;
-  });
-
-  if (!audioUrl) {
-    alert("Audio upload failed");
-    return;
-  }
-
-  trackInfo += `Track ${i + 1}:\n`;
-  trackInfo += `Title: ${title}\n`;
-  trackInfo += `Version: ${version || "Original"}\n`;
-  trackInfo += `Audio: ${audioUrl}\n\n`;
-                }
   const coverInput = document.getElementById("coverArt");
 
   if (!coverInput.files[0]) {
     alert("Cover art missing");
     btn.disabled = false;
-    btn.innerText = "Send Release 🚀";
     return;
   }
 
   const coverUrl = await uploadFile(coverInput.files[0], "image", (percent) => {
-  btn.innerText = `Uploading Cover... ${percent}%`;
-});
+    btn.innerText = `Uploading Cover... ${percent}%`;
+  });
 
   if (!coverUrl) {
-    const preview = document.createElement("img");
-preview.src = coverUrl;
-preview.style.width = "100%";
-preview.style.marginTop = "15px";
-document.querySelector(".container").appendChild(preview);
     alert("Cover upload failed");
     btn.disabled = false;
-    btn.innerText = "Send Release 🚀";
     return;
   }
 
+  // Show cover preview
+  const preview = document.createElement("img");
+  preview.src = coverUrl;
+  preview.className = "preview";
+  document.querySelector(".container").appendChild(preview);
+
   const data = new FormData();
-  data.append("file_links", fileLinks.trim());
-  data.append("cover_art", coverUrl);
   data.append("release_type", document.getElementById("releaseType").value);
+  data.append("tracks", trackInfo);
+  data.append("cover_art", coverUrl);
 
   await fetch("https://formspree.io/f/mzzrkpqj", {
     method: "POST",
@@ -241,8 +237,8 @@ document.querySelector(".container").appendChild(preview);
   });
 
   btn.innerText = "Release Sent Successfully ✅";
-alert("Release delivered successfully!");
-document.getElementById("releaseForm").reset();
+  alert("Release delivered successfully!");
+  document.getElementById("releaseForm").reset();
   btn.disabled = false;
 });
 </script>
