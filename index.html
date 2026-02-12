@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Release Delivery Portal</title>
+
 <style>
 body {
   background:#0b0b0b;
@@ -25,6 +26,7 @@ h1 {
   text-align:center;
   margin-bottom:25px;
   font-size:24px;
+  font-weight:600;
 }
 
 label {
@@ -79,6 +81,7 @@ img.preview {
 <body>
 
 <div class="container">
+
 <h1>Release Upload</h1>
 
 <form id="releaseForm">
@@ -97,18 +100,39 @@ img.preview {
 <input type="file" id="coverArt" required>
 
 <button type="button" id="addTrackBtn">+ Add Another Track</button>
+
 <button type="submit" id="submitBtn">Send Release 🚀</button>
 
 </form>
+
+<!-- SUCCESS SCREEN -->
+<div id="successScreen" style="display:none; text-align:center; padding:40px 20px;">
+  <h2 style="color:#00ff99;">✅ Release Submitted</h2>
+  <p style="margin-top:15px; color:#ccc;">
+    Your files have been successfully delivered to Funk Records.
+  </p>
+  <button onclick="location.reload()" style="
+    margin-top:30px;
+    padding:14px 25px;
+    border:none;
+    border-radius:10px;
+    background:#00ff99;
+    font-weight:bold;
+    cursor:pointer;">
+    Submit Another Release
+  </button>
+</div>
+
 </div>
 
 <script>
 const CLOUD_NAME = "djpeitfan";
 const UPLOAD_PRESET = "label_upload";
 
-const tracksContainer = document.getElementById("tracksContainer");
 const releaseType = document.getElementById("releaseType");
+const tracksContainer = document.getElementById("tracksContainer");
 const addTrackBtn = document.getElementById("addTrackBtn");
+const form = document.getElementById("releaseForm");
 const submitBtn = document.getElementById("submitBtn");
 
 function addTrack() {
@@ -127,19 +151,9 @@ function addTrack() {
   tracksContainer.appendChild(div);
 }
 
-window.onload = () => {
-  addTrack();
-};
-
 releaseType.addEventListener("change", () => {
   tracksContainer.innerHTML = "";
   addTrack();
-
-  if (releaseType.value === "Single") {
-    addTrackBtn.style.display = "none";
-  } else {
-    addTrackBtn.style.display = "block";
-  }
 });
 
 addTrackBtn.addEventListener("click", addTrack);
@@ -148,7 +162,6 @@ function uploadFile(file, type, progressCallback) {
   return new Promise((resolve) => {
 
     const resourceType = type === "image" ? "image" : "raw";
-
     const xhr = new XMLHttpRequest();
     const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
 
@@ -179,7 +192,7 @@ function uploadFile(file, type, progressCallback) {
   });
 }
 
-document.getElementById("releaseForm").addEventListener("submit", async e => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   submitBtn.disabled = true;
@@ -193,17 +206,16 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
     const inputs = tracks[i].querySelectorAll("input");
     const title = inputs[0].value;
     const version = inputs[1].value;
-    const file = tracks[i].querySelector(".audioFile").files[0];
+    const fileInput = tracks[i].querySelector(".audioFile");
 
-    if (!file) {
-      alert("Audio missing");
+    if (!fileInput.files[0]) {
+      alert("Audio file missing");
       submitBtn.disabled = false;
-      submitBtn.innerText = "Send Release 🚀";
       return;
     }
 
-    const audioUrl = await uploadFile(file, "audio", (percent) => {
-      submitBtn.innerText = `Uploading Audio ${i+1}... ${percent}%`;
+    const audioUrl = await uploadFile(fileInput.files[0], "audio", (percent) => {
+      submitBtn.innerText = `Uploading Audio... ${percent}%`;
     });
 
     if (!audioUrl) {
@@ -212,18 +224,21 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
       return;
     }
 
-    trackInfo += `Track ${i+1}:\nTitle: ${title}\nVersion: ${version || "Original"}\nAudio: ${audioUrl}\n\n`;
+    trackInfo += `Track ${i + 1}:\n`;
+    trackInfo += `Title: ${title}\n`;
+    trackInfo += `Version: ${version || "Original"}\n`;
+    trackInfo += `Audio: ${audioUrl}\n\n`;
   }
 
-  const coverFile = document.getElementById("coverArt").files[0];
+  const coverInput = document.getElementById("coverArt");
 
-  if (!coverFile) {
-    alert("Cover missing");
+  if (!coverInput.files[0]) {
+    alert("Cover art missing");
     submitBtn.disabled = false;
     return;
   }
 
-  const coverUrl = await uploadFile(coverFile, "image", (percent) => {
+  const coverUrl = await uploadFile(coverInput.files[0], "image", (percent) => {
     submitBtn.innerText = `Uploading Cover... ${percent}%`;
   });
 
@@ -249,26 +264,11 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
   });
 
   submitBtn.innerText = "Finalizing...";
-await new Promise(r => setTimeout(r, 300)); // small delay for UI repaint
 
-document.querySelector(".container").innerHTML = `
-  <div style="text-align:center; padding:40px;">
-    <h2 style="color:#00ff99;">✅ Release Submitted Successfully</h2>
-    <p style="color:#ccc; margin-top:15px;">
-      Your files have been delivered to Funk Records.
-    </p>
-    <button onclick="location.reload()" style="
-      margin-top:30px;
-      padding:14px 25px;
-      border:none;
-      border-radius:10px;
-      background:#00ff99;
-      font-weight:bold;
-      cursor:pointer;">
-      Submit Another Release
-    </button>
-  </div>
-`;
+  await new Promise(r => setTimeout(r, 300));
+
+  form.style.display = "none";
+  document.getElementById("successScreen").style.display = "block";
 });
 </script>
 
