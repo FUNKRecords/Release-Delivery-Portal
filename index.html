@@ -145,69 +145,6 @@ function addTrack() {
   document.getElementById('tracksContainer').appendChild(div);
 }
 
-document.getElementById('releaseType').addEventListener('change', function() {
-  const container = document.getElementById('tracksContainer');
-
-  // reset counter
-  trackCount = 0;
-
-  // clear old tracks
-  while (container.firstChild) {
-    container.removeChild(container.firstChild);
-  }
-
-  // always add one track
-  addTrack();
-
-  // hide add button for Single
-  document.getElementById("addTrackBtn").style.display =
-    this.value === "Single" ? "none" : "block";
-});
-
-function uploadFile(file, container, isImage=false) {
-  return new Promise(resolve => {
-    const xhr = new XMLHttpRequest();
-    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-
-    const bar = document.createElement("div");
-    bar.className = "progressBar";
-    const fill = document.createElement("div");
-    fill.className = "progressFill";
-    bar.appendChild(fill);
-    container.appendChild(bar);
-
-    xhr.upload.onprogress = e => {
-      if (e.lengthComputable)
-        fill.style.width = (e.loaded / e.total * 100) + "%";
-    };
-
-    xhr.onload = () => {
-  const res = JSON.parse(xhr.responseText);
-
-  // Use the secure_url directly (ALWAYS WORKS)
-  const fileUrl = res.secure_url;
-
-  if (isImage) {
-    const img = document.createElement("img");
-    img.src = fileUrl;
-    img.style.width = "100%";
-    img.style.marginTop = "10px";
-    img.style.borderRadius = "8px";
-    document.getElementById("previewArea").appendChild(img);
-  }
-
-  resolve(fileUrl);
-};
-
-    xhr.open("POST", url);
-    xhr.send(formData);
-  });
-}
-
 document.getElementById("releaseForm").addEventListener("submit", async e => {
   e.preventDefault();
 
@@ -217,27 +154,53 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
 
   let uploadedLinks = "";
 
-  // Upload all audio files
   const audioInputs = document.querySelectorAll(".audioFile");
-  for (let input of audioInputs) {
-    const file = input.files[0];
-    if (!file) continue;
 
+  for (let input of audioInputs) {
+
+    if (!input.files || !input.files[0]) {
+      alert("Audio file missing!");
+      btn.disabled = false;
+      btn.innerText = "Send Release 🚀";
+      return;
+    }
+
+    const file = input.files[0];
     const url = await uploadFile(file, input.parentElement, false);
+
+    if (!url) {
+      alert("Audio upload failed!");
+      btn.disabled = false;
+      btn.innerText = "Send Release 🚀";
+      return;
+    }
+
     uploadedLinks += url + "\n";
   }
 
-  // Upload cover
-  const cover = document.getElementById("coverArt").files[0];
-  const coverUrl = await uploadFile(cover, document.getElementById("coverArt").parentElement, true);
+  const coverInput = document.getElementById("coverArt");
 
-  // Prepare form data
+  if (!coverInput.files || !coverInput.files[0]) {
+    alert("Cover art missing!");
+    btn.disabled = false;
+    btn.innerText = "Send Release 🚀";
+    return;
+  }
+
+  const coverUrl = await uploadFile(coverInput.files[0], coverInput.parentElement, true);
+
+  if (!coverUrl) {
+    alert("Cover upload failed!");
+    btn.disabled = false;
+    btn.innerText = "Send Release 🚀";
+    return;
+  }
+
   const data = new FormData();
-  data.append("file_links", uploadedLinks);
+  data.append("file_links", uploadedLinks.trim());
   data.append("cover_art", coverUrl);
   data.append("release_type", document.getElementById("releaseType").value);
 
-  // Send to Formspree
   await fetch("https://formspree.io/f/mzzrkpqj", {
     method: "POST",
     body: data
