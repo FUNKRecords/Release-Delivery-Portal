@@ -248,24 +248,27 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
     body: data
   });
 
-  document.querySelector(".container").innerHTML = `
-    <div style="text-align:center; padding:40px;">
-      <h2 style="color:#00ff99;">✅ Release Submitted Successfully</h2>
-      <p style="color:#ccc; margin-top:15px;">
-        Your files have been delivered to Funk Records.
-      </p>
-      <button onclick="location.reload()" style="
-        margin-top:30px;
-        padding:14px 25px;
-        border:none;
-        border-radius:10px;
-        background:#00ff99;
-        font-weight:bold;
-        cursor:pointer;">
-        Submit Another Release
-      </button>
-    </div>
-  `;
+  submitBtn.innerText = "Finalizing...";
+await new Promise(r => setTimeout(r, 300)); // small delay for UI repaint
+
+document.querySelector(".container").innerHTML = `
+  <div style="text-align:center; padding:40px;">
+    <h2 style="color:#00ff99;">✅ Release Submitted Successfully</h2>
+    <p style="color:#ccc; margin-top:15px;">
+      Your files have been delivered to Funk Records.
+    </p>
+    <button onclick="location.reload()" style="
+      margin-top:30px;
+      padding:14px 25px;
+      border:none;
+      border-radius:10px;
+      background:#00ff99;
+      font-weight:bold;
+      cursor:pointer;">
+      Submit Another Release
+    </button>
+  </div>
+`;
 });
 </script>
 
