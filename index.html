@@ -236,10 +236,28 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
     body: data
   });
 
-  btn.innerText = "Release Sent Successfully ✅";
-  alert("Release delivered successfully!");
-  document.getElementById("releaseForm").reset();
-  btn.disabled = false;
+  document.querySelector(".container").innerHTML = `
+  <div style="text-align:center; padding:40px 20px;">
+    <h2 style="color:#00ff99; font-size:26px;">✅ Release Submitted</h2>
+    <p style="margin-top:20px; font-size:15px; color:#ccc;">
+      Your files have been successfully delivered to Funk Records.
+    </p>
+    <p style="margin-top:10px; font-size:14px; color:#777;">
+      We will review your submission and contact you soon.
+    </p>
+    <button onclick="location.reload()" style="
+      margin-top:30px;
+      padding:14px 25px;
+      border:none;
+      border-radius:10px;
+      background:#00ff99;
+      font-weight:bold;
+      cursor:pointer;
+    ">
+      Submit Another Release
+    </button>
+  </div>
+`;
 });
 </script>
 
