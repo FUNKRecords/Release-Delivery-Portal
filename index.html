@@ -22,13 +22,12 @@ body {
 }
 
 h1 {
-  text-align: center;
-  margin-bottom: 25px;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  color: #f2f2f2;
-  }
+  text-align:center;
+  margin-bottom:25px;
+  font-size:24px;
+  font-weight:600;
+  letter-spacing:1.5px;
+}
 
 label {
   display:block;
@@ -72,20 +71,6 @@ button:hover {
   background:#00cc77;
 }
 
-.progressBar {
-  height:6px;
-  background:#333;
-  margin-top:10px;
-  border-radius:6px;
-}
-
-.progressFill {
-  height:100%;
-  width:0%;
-  background:#00ff99;
-  border-radius:6px;
-}
-
 img {
   margin-top:15px;
   border-radius:12px;
@@ -110,12 +95,11 @@ img {
 </select>
 
 <div id="tracksContainer"></div>
+
 <label>Cover Artwork (3000x3000)</label>
 <input type="file" id="coverArt" required>
 
-<button type="button" id="addTrackBtn" onclick="addTrack()">+ Add Another Track</button>
-
-<div id="previewArea"></div>
+<button type="button" onclick="addTrack()">+ Add Another Track</button>
 
 <button type="submit" id="submitBtn">Send Release 🚀</button>
 
@@ -125,11 +109,8 @@ img {
 <script>
 const CLOUD_NAME = "djpeitfan";
 const UPLOAD_PRESET = "label_upload";
-let trackCount = 0;
-let uploadedLinks = "";
 
 function addTrack() {
-  trackCount++;
   const div = document.createElement('div');
   div.className = "track";
   div.innerHTML = `
@@ -145,6 +126,47 @@ function addTrack() {
   document.getElementById('tracksContainer').appendChild(div);
 }
 
+document.getElementById('releaseType').addEventListener('change', function() {
+  const container = document.getElementById('tracksContainer');
+  container.innerHTML = "";
+  addTrack();
+});
+
+function uploadFile(file) {
+  return new Promise((resolve) => {
+
+    const xhr = new XMLHttpRequest();
+    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    xhr.onload = () => {
+      try {
+        const res = JSON.parse(xhr.responseText);
+        if (res.secure_url) {
+          resolve(res.secure_url);
+        } else {
+          console.log("Upload failed:", res);
+          resolve(null);
+        }
+      } catch (err) {
+        console.log("Parse error:", err);
+        resolve(null);
+      }
+    };
+
+    xhr.onerror = () => {
+      console.log("XHR error");
+      resolve(null);
+    };
+
+    xhr.open("POST", url);
+    xhr.send(formData);
+  });
+}
+
 document.getElementById("releaseForm").addEventListener("submit", async e => {
   e.preventDefault();
 
@@ -152,52 +174,50 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
   btn.disabled = true;
   btn.innerText = "Uploading...";
 
-  let uploadedLinks = "";
+  let fileLinks = "";
 
   const audioInputs = document.querySelectorAll(".audioFile");
 
   for (let input of audioInputs) {
-
-    if (!input.files || !input.files[0]) {
-      alert("Audio file missing!");
+    if (!input.files[0]) {
+      alert("Audio file missing");
       btn.disabled = false;
       btn.innerText = "Send Release 🚀";
       return;
     }
 
-    const file = input.files[0];
-    const url = await uploadFile(file, input.parentElement, false);
+    const audioUrl = await uploadFile(input.files[0]);
 
-    if (!url) {
-      alert("Audio upload failed!");
+    if (!audioUrl) {
+      alert("Audio upload failed");
       btn.disabled = false;
       btn.innerText = "Send Release 🚀";
       return;
     }
 
-    uploadedLinks += url + "\n";
+    fileLinks += audioUrl + "\n";
   }
 
   const coverInput = document.getElementById("coverArt");
 
-  if (!coverInput.files || !coverInput.files[0]) {
-    alert("Cover art missing!");
+  if (!coverInput.files[0]) {
+    alert("Cover art missing");
     btn.disabled = false;
     btn.innerText = "Send Release 🚀";
     return;
   }
 
-  const coverUrl = await uploadFile(coverInput.files[0], coverInput.parentElement, true);
+  const coverUrl = await uploadFile(coverInput.files[0]);
 
   if (!coverUrl) {
-    alert("Cover upload failed!");
+    alert("Cover upload failed");
     btn.disabled = false;
     btn.innerText = "Send Release 🚀";
     return;
   }
 
   const data = new FormData();
-  data.append("file_links", uploadedLinks.trim());
+  data.append("file_links", fileLinks.trim());
   data.append("cover_art", coverUrl);
   data.append("release_type", document.getElementById("releaseType").value);
 
