@@ -210,40 +210,41 @@ function uploadFile(file, container, isImage=false) {
 
 document.getElementById("releaseForm").addEventListener("submit", async e => {
   e.preventDefault();
+
   const btn = document.getElementById("submitBtn");
   btn.disabled = true;
   btn.innerText = "Uploading...";
 
-  uploadedLinks = "";
+  let uploadedLinks = "";
 
+  // Upload all audio files
   const audioInputs = document.querySelectorAll(".audioFile");
   for (let input of audioInputs) {
     const file = input.files[0];
+    if (!file) continue;
+
     const url = await uploadFile(file, input.parentElement, false);
     uploadedLinks += url + "\n";
   }
 
+  // Upload cover
   const cover = document.getElementById("coverArt").files[0];
   const coverUrl = await uploadFile(cover, document.getElementById("coverArt").parentElement, true);
-  uploadedLinks += coverUrl;
 
-  btn.innerText = "Send Release 🚀";
+  // Prepare form data
+  const data = new FormData();
+  data.append("file_links", uploadedLinks);
+  data.append("cover_art", coverUrl);
+  data.append("release_type", document.getElementById("releaseType").value);
+
+  // Send to Formspree
+  await fetch("https://formspree.io/f/mzzrkpqj", {
+    method: "POST",
+    body: data
+  });
+
+  btn.innerText = "Submitted ✅";
   btn.disabled = false;
-
-  btn.onclick = async () => {
-    btn.innerText = "Sending...";
-    btn.disabled = true;
-
-    const data = new FormData();
-    data.append("file_links", uploadedLinks);
-    data.append("release_type", document.getElementById("releaseType").value);
-
-    await fetch("https://formspree.io/f/mzzrkpqj", {
-  method: "POST",
-  body: data
-});
-    btn.innerText = "Submitted ✅";
-  };
 });
 </script>
 
