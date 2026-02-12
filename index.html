@@ -171,93 +171,96 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
   btn.disabled = true;
   btn.innerText = "Uploading...";
 
-  let trackInfo = "";
-  const tracks = document.querySelectorAll(".track");
+  try {
 
-  for (let i = 0; i < tracks.length; i++) {
+    let trackInfo = "";
+    const tracks = document.querySelectorAll(".track");
 
-    const title = tracks[i].querySelectorAll("input")[0].value;
-    const version = tracks[i].querySelectorAll("input")[1].value;
-    const fileInput = tracks[i].querySelector(".audioFile");
+    for (let i = 0; i < tracks.length; i++) {
 
-    if (!fileInput.files[0]) {
-      alert("Audio file missing");
-      btn.disabled = false;
-      return;
+      const title = tracks[i].querySelectorAll("input")[0].value;
+      const version = tracks[i].querySelectorAll("input")[1].value;
+      const fileInput = tracks[i].querySelector(".audioFile");
+
+      if (!fileInput.files[0]) {
+        throw new Error("Audio file missing");
+      }
+
+      const audioUrl = await uploadFile(fileInput.files[0], "audio", (percent) => {
+        btn.innerText = `Uploading Audio... ${percent}%`;
+      });
+
+      if (!audioUrl) {
+        throw new Error("Audio upload failed");
+      }
+
+      trackInfo += `Track ${i + 1}:\n`;
+      trackInfo += `Title: ${title}\n`;
+      trackInfo += `Version: ${version || "Original"}\n`;
+      trackInfo += `Audio: ${audioUrl}\n\n`;
     }
 
-    const audioUrl = await uploadFile(fileInput.files[0], "audio", (percent) => {
-      btn.innerText = `Uploading Audio... ${percent}%`;
+    const coverInput = document.getElementById("coverArt");
+
+    if (!coverInput.files[0]) {
+      throw new Error("Cover art missing");
+    }
+
+    const coverUrl = await uploadFile(coverInput.files[0], "image", (percent) => {
+      btn.innerText = `Uploading Cover... ${percent}%`;
     });
 
-    if (!audioUrl) {
-      alert("Audio upload failed");
-      btn.disabled = false;
-      return;
+    if (!coverUrl) {
+      throw new Error("Cover upload failed");
     }
 
-    trackInfo += `Track ${i + 1}:\n`;
-    trackInfo += `Title: ${title}\n`;
-    trackInfo += `Version: ${version || "Original"}\n`;
-    trackInfo += `Audio: ${audioUrl}\n\n`;
-  }
+    btn.innerText = "Sending Release...";
 
-  const coverInput = document.getElementById("coverArt");
+    const data = new FormData();
+    data.append("release_type", document.getElementById("releaseType").value);
+    data.append("tracks", trackInfo);
+    data.append("cover_art", coverUrl);
 
-  if (!coverInput.files[0]) {
-    alert("Cover art missing");
+    const response = await fetch("https://formspree.io/f/mzzrkpqj", {
+      method: "POST",
+      body: data
+    });
+
+    if (!response.ok) {
+      throw new Error("Form submission failed");
+    }
+
+    // SUCCESS SCREEN
+    document.querySelector(".container").innerHTML = `
+      <div style="text-align:center; padding:40px 20px;">
+        <h2 style="color:#00ff99; font-size:26px;">✅ Release Submitted</h2>
+        <p style="margin-top:20px; font-size:15px; color:#ccc;">
+          Your files have been successfully delivered to Funk Records.
+        </p>
+        <p style="margin-top:10px; font-size:14px; color:#777;">
+          We will review your submission and contact you soon.
+        </p>
+        <button onclick="location.reload()" style="
+          margin-top:30px;
+          padding:14px 25px;
+          border:none;
+          border-radius:10px;
+          background:#00ff99;
+          font-weight:bold;
+          cursor:pointer;
+        ">
+          Submit Another Release
+        </button>
+      </div>
+    `;
+
+  } catch (error) {
+    alert(error.message);
     btn.disabled = false;
-    return;
+    btn.innerText = "Send Release 🚀";
   }
 
-  const coverUrl = await uploadFile(coverInput.files[0], "image", (percent) => {
-    btn.innerText = `Uploading Cover... ${percent}%`;
-  });
-
-  if (!coverUrl) {
-    alert("Cover upload failed");
-    btn.disabled = false;
-    return;
-  }
-
-  // Show cover preview
-  const preview = document.createElement("img");
-  preview.src = coverUrl;
-  preview.className = "preview";
-  document.querySelector(".container").appendChild(preview);
-
-  const data = new FormData();
-  data.append("release_type", document.getElementById("releaseType").value);
-  data.append("tracks", trackInfo);
-  data.append("cover_art", coverUrl);
-
-  await fetch("https://formspree.io/f/mzzrkpqj", {
-    method: "POST",
-    body: data
-  });
-
-  document.querySelector(".container").innerHTML = `
-  <div style="text-align:center; padding:40px 20px;">
-    <h2 style="color:#00ff99; font-size:26px;">✅ Release Submitted</h2>
-    <p style="margin-top:20px; font-size:15px; color:#ccc;">
-      Your files have been successfully delivered to Funk Records.
-    </p>
-    <p style="margin-top:10px; font-size:14px; color:#777;">
-      We will review your submission and contact you soon.
-    </p>
-    <button onclick="location.reload()" style="
-      margin-top:30px;
-      padding:14px 25px;
-      border:none;
-      border-radius:10px;
-      background:#00ff99;
-      font-weight:bold;
-      cursor:pointer;
-    ">
-      Submit Another Release
-    </button>
-  </div>
-`;
+});
 });
 </script>
 
