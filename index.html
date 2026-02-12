@@ -132,11 +132,17 @@ document.getElementById('releaseType').addEventListener('change', function() {
   addTrack();
 });
 
-function uploadFile(file) {
+function uploadFile(file, type) {
   return new Promise((resolve) => {
 
+    let resourceType = "raw"; // default for audio
+
+    if (type === "image") {
+      resourceType = "image";
+    }
+
     const xhr = new XMLHttpRequest();
-    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`;
+    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
 
     const formData = new FormData();
     formData.append("file", file);
@@ -151,7 +157,7 @@ function uploadFile(file) {
           alert(JSON.stringify(res));
           resolve(null);
         }
-      } catch (err) {
+      } catch {
         resolve(null);
       }
     };
@@ -161,7 +167,7 @@ function uploadFile(file) {
     xhr.open("POST", url);
     xhr.send(formData);
   });
-}
+  }
 
 document.getElementById("releaseForm").addEventListener("submit", async e => {
   e.preventDefault();
@@ -182,8 +188,7 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
       return;
     }
 
-    const audioUrl = await uploadFile(input.files[0]);
-
+    const audioUrl = await uploadFile(input.files[0], "audio");
     if (!audioUrl) {
       alert("Audio upload failed");
       btn.disabled = false;
@@ -203,7 +208,7 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
     return;
   }
 
-  const coverUrl = await uploadFile(coverInput.files[0]);
+  const coverUrl = await uploadFile(coverInput.files[0], "image");
 
   if (!coverUrl) {
     alert("Cover upload failed");
