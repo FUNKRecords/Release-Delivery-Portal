@@ -258,17 +258,16 @@ form.addEventListener("submit", async (e) => {
   data.append("tracks", trackInfo);
   data.append("cover_art", coverUrl);
 
-  await fetch("https://formspree.io/f/mzzrkpqj", {
-    method: "POST",
-    body: data
-  });
+  fetch("https://formspree.io/f/mzzrkpqj", {
+  method: "POST",
+  body: data,
+  headers: {
+    'Accept': 'application/json'
+  }
+}).catch(() => {});
 
-  submitBtn.innerText = "Finalizing...";
-
-  await new Promise(r => setTimeout(r, 300));
-
-  form.style.display = "none";
-  document.getElementById("successScreen").style.display = "block";
+form.style.display = "none";
+document.getElementById("successScreen").style.display = "block";
 });
 </script>
 
