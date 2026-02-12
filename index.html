@@ -136,7 +136,7 @@ function uploadFile(file) {
   return new Promise((resolve) => {
 
     const xhr = new XMLHttpRequest();
-    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`;
 
     const formData = new FormData();
     formData.append("file", file);
@@ -148,19 +148,15 @@ function uploadFile(file) {
         if (res.secure_url) {
           resolve(res.secure_url);
         } else {
-          console.log("Upload failed:", res);
+          alert(JSON.stringify(res));
           resolve(null);
         }
       } catch (err) {
-        console.log("Parse error:", err);
         resolve(null);
       }
     };
 
-    xhr.onerror = () => {
-      console.log("XHR error");
-      resolve(null);
-    };
+    xhr.onerror = () => resolve(null);
 
     xhr.open("POST", url);
     xhr.send(formData);
