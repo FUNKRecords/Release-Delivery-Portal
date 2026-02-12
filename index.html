@@ -132,14 +132,10 @@ document.getElementById('releaseType').addEventListener('change', function() {
   addTrack();
 });
 
-function uploadFile(file, type) {
+function uploadFile(file, type, progressCallback) {
   return new Promise((resolve) => {
 
-    let resourceType = "raw"; // default for audio
-
-    if (type === "image") {
-      resourceType = "image";
-    }
+    let resourceType = type === "image" ? "image" : "raw";
 
     const xhr = new XMLHttpRequest();
     const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
@@ -148,15 +144,17 @@ function uploadFile(file, type) {
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET);
 
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && progressCallback) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        progressCallback(percent);
+      }
+    };
+
     xhr.onload = () => {
       try {
         const res = JSON.parse(xhr.responseText);
-        if (res.secure_url) {
-          resolve(res.secure_url);
-        } else {
-          alert(JSON.stringify(res));
-          resolve(null);
-        }
+        resolve(res.secure_url || null);
       } catch {
         resolve(null);
       }
@@ -188,7 +186,9 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
       return;
     }
 
-    const audioUrl = await uploadFile(input.files[0], "audio");
+    const audioUrl = await uploadFile(input.files[0], "audio", (percent) => {
+  btn.innerText = `Uploading Audio... ${percent}%`;
+});
     if (!audioUrl) {
       alert("Audio upload failed");
       btn.disabled = false;
@@ -208,9 +208,16 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
     return;
   }
 
-  const coverUrl = await uploadFile(coverInput.files[0], "image");
+  const coverUrl = await uploadFile(coverInput.files[0], "image", (percent) => {
+  btn.innerText = `Uploading Cover... ${percent}%`;
+});
 
   if (!coverUrl) {
+    const preview = document.createElement("img");
+preview.src = coverUrl;
+preview.style.width = "100%";
+preview.style.marginTop = "15px";
+document.querySelector(".container").appendChild(preview);
     alert("Cover upload failed");
     btn.disabled = false;
     btn.innerText = "Send Release 🚀";
@@ -227,7 +234,9 @@ document.getElementById("releaseForm").addEventListener("submit", async e => {
     body: data
   });
 
-  btn.innerText = "Submitted ✅";
+  btn.innerText = "Release Sent Successfully ✅";
+alert("Release delivered successfully!");
+document.getElementById("releaseForm").reset();
   btn.disabled = false;
 });
 </script>
