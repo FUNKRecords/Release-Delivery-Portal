@@ -95,10 +95,10 @@ img.preview {
 
 <label>Release Type</label>
 <select id="releaseType" required>
-  <option value="">Select</option>
-  <option value="Single">Single</option>
-  <option value="EP">EP</option>
-  <option value="Album">Album</option>
+<option value="">Select</option>
+<option value="Single">Single</option>
+<option value="EP">EP</option>
+<option value="Album">Album</option>
 </select>
 
 <div id="tracksContainer"></div>
@@ -112,22 +112,21 @@ img.preview {
 
 </form>
 
-<!-- SUCCESS SCREEN -->
 <div id="successScreen" style="display:none; text-align:center; padding:40px 20px;">
-  <h2 style="color:#00ff99;">✅ Release Submitted</h2>
-  <p style="margin-top:15px; color:#ccc;">
-    Your files have been successfully delivered to Funk UNIVERSE.
-  </p>
-  <button onclick="location.reload()" style="
-    margin-top:30px;
-    padding:14px 25px;
-    border:none;
-    border-radius:10px;
-    background:#00ff99;
-    font-weight:bold;
-    cursor:pointer;">
-    Submit Another Release
-  </button>
+<h2 style="color:#00ff99;">✅ Release Submitted</h2>
+<p style="margin-top:15px; color:#ccc;">
+Your files have been successfully delivered to Funk UNIVERSE.
+</p>
+<button onclick="location.reload()" style="
+margin-top:30px;
+padding:14px 25px;
+border:none;
+border-radius:10px;
+background:#00ff99;
+font-weight:bold;
+cursor:pointer;">
+Submit Another Release
+</button>
 </div>
 
 </div>
@@ -143,140 +142,189 @@ const form = document.getElementById("releaseForm");
 const submitBtn = document.getElementById("submitBtn");
 
 function addTrack() {
-  const div = document.createElement("div");
-  div.className = "track";
-  div.innerHTML = `
-    <label>Track Title</label>
-    <input type="text" required>
 
-    <label>Version Name (optional)</label>
-    <input type="text">
+const div = document.createElement("div");
+div.className = "track";
 
-    <label>Audio File</label>
-    <input type="file" class="audioFile" required>
-  `;
-  tracksContainer.appendChild(div);
+div.innerHTML = `
+<label>Track Title</label>
+<input type="text" required>
+
+<label>Version Name (optional)</label>
+<input type="text">
+
+<label>Audio File</label>
+<input type="file" class="audioFile" required>
+`;
+
+tracksContainer.appendChild(div);
 }
 
 releaseType.addEventListener("change", () => {
-  tracksContainer.innerHTML = "";
-  addTrack();
+tracksContainer.innerHTML = "";
+addTrack();
 });
 
 addTrackBtn.addEventListener("click", addTrack);
 
 function uploadFile(file, type, progressCallback) {
-  return new Promise((resolve) => {
 
-    const resourceType = type === "image" ? "image" : "raw";
-    const xhr = new XMLHttpRequest();
-    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
+return new Promise((resolve) => {
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
+const resourceType = type === "image" ? "image" : "video";
+const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
 
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && progressCallback) {
-        const percent = Math.round((e.loaded / e.total) * 100);
-        progressCallback(percent);
-      }
-    };
+const xhr = new XMLHttpRequest();
+xhr.timeout = 0;
 
-    xhr.onload = () => {
-      try {
-        const res = JSON.parse(xhr.responseText);
-        resolve(res.secure_url || null);
-      } catch {
-        resolve(null);
-      }
-    };
+const formData = new FormData();
+formData.append("file", file);
+formData.append("upload_preset", UPLOAD_PRESET);
 
-    xhr.onerror = () => resolve(null);
+xhr.upload.onprogress = (e) => {
 
-    xhr.open("POST", url);
-    xhr.send(formData);
-  });
+if (e.lengthComputable && progressCallback) {
+
+const percent = Math.round((e.loaded / e.total) * 100);
+progressCallback(percent);
+
+}
+
+};
+
+xhr.onload = () => {
+
+if (xhr.status === 200) {
+
+try {
+
+const res = JSON.parse(xhr.responseText);
+
+if (res.secure_url) resolve(res.secure_url);
+else if (res.url) resolve(res.url);
+else resolve(null);
+
+} catch {
+
+resolve(null);
+
+}
+
+} else {
+
+resolve(null);
+
+}
+
+};
+
+xhr.onerror = () => resolve(null);
+
+xhr.open("POST", url);
+xhr.send(formData);
+
+});
+
 }
 
 form.addEventListener("submit", async (e) => {
-  e.preventDefault();
 
-  submitBtn.disabled = true;
-  submitBtn.innerText = "Uploading...";
+e.preventDefault();
 
-  let trackInfo = "";
-  const tracks = document.querySelectorAll(".track");
+submitBtn.disabled = true;
+submitBtn.innerText = "Uploading...";
 
-  for (let i = 0; i < tracks.length; i++) {
+let trackInfo = "";
 
-    const inputs = tracks[i].querySelectorAll("input");
-    const title = inputs[0].value;
-    const version = inputs[1].value;
-    const fileInput = tracks[i].querySelector(".audioFile");
+const tracks = document.querySelectorAll(".track");
 
-    if (!fileInput.files[0]) {
-      alert("Audio file missing");
-      submitBtn.disabled = false;
-      return;
-    }
+for (let i = 0; i < tracks.length; i++) {
 
-    const audioUrl = await uploadFile(fileInput.files[0], "audio", (percent) => {
-      submitBtn.innerText = `Uploading Audio... ${percent}%`;
-    });
+const inputs = tracks[i].querySelectorAll("input");
 
-    if (!audioUrl) {
-      alert("Audio upload failed");
-      submitBtn.disabled = false;
-      return;
-    }
+const title = inputs[0].value;
+const version = inputs[1].value;
 
-    trackInfo += `Track ${i + 1}:\n`;
-    trackInfo += `Title: ${title}\n`;
-    trackInfo += `Version: ${version || "Original"}\n`;
-    trackInfo += `Audio: ${audioUrl}\n\n`;
-  }
+const fileInput = tracks[i].querySelector(".audioFile");
 
-  const coverInput = document.getElementById("coverArt");
+if (!fileInput.files[0]) {
 
-  if (!coverInput.files[0]) {
-    alert("Cover art missing");
-    submitBtn.disabled = false;
-    return;
-  }
+alert("Audio file missing");
+submitBtn.disabled = false;
+return;
 
-  const coverUrl = await uploadFile(coverInput.files[0], "image", (percent) => {
-    submitBtn.innerText = `Uploading Cover... ${percent}%`;
-  });
+}
 
-  if (!coverUrl) {
-    alert("Cover upload failed");
-    submitBtn.disabled = false;
-    return;
-  }
+const audioUrl = await uploadFile(fileInput.files[0], "audio", (percent) => {
 
-  const preview = document.createElement("img");
-  preview.src = coverUrl;
-  preview.className = "preview";
-  tracksContainer.appendChild(preview);
+submitBtn.innerText = `Uploading Audio... ${percent}%`;
 
-  const data = new FormData();
-  data.append("release_type", releaseType.value);
-  data.append("tracks", trackInfo);
-  data.append("cover_art", coverUrl);
+});
 
-  fetch("https://formspree.io/f/mzzrkpqj", {
-  method: "POST",
-  body: data,
-  headers: {
-    'Accept': 'application/json'
-  }
+if (!audioUrl) {
+
+alert("Audio upload failed");
+submitBtn.disabled = false;
+return;
+
+}
+
+trackInfo += `Track ${i + 1}:\n`;
+trackInfo += `Title: ${title}\n`;
+trackInfo += `Version: ${version || "Original"}\n`;
+trackInfo += `Audio: ${audioUrl}\n\n`;
+
+}
+
+const coverInput = document.getElementById("coverArt");
+
+if (!coverInput.files[0]) {
+
+alert("Cover art missing");
+submitBtn.disabled = false;
+return;
+
+}
+
+const coverUrl = await uploadFile(coverInput.files[0], "image", (percent) => {
+
+submitBtn.innerText = `Uploading Cover... ${percent}%`;
+
+});
+
+if (!coverUrl) {
+
+alert("Cover upload failed");
+submitBtn.disabled = false;
+return;
+
+}
+
+const preview = document.createElement("img");
+preview.src = coverUrl;
+preview.className = "preview";
+
+tracksContainer.appendChild(preview);
+
+const data = new FormData();
+
+data.append("release_type", releaseType.value);
+data.append("tracks", trackInfo);
+data.append("cover_art", coverUrl);
+
+fetch("https://formspree.io/f/mzzrkpqj", {
+
+method: "POST",
+body: data,
+headers: { 'Accept': 'application/json' }
+
 }).catch(() => {});
 
 form.style.display = "none";
 document.getElementById("successScreen").style.display = "block";
+
 });
 </script>
 
 </body>
-</html>
+  </html>
