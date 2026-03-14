@@ -115,7 +115,7 @@ img.preview {
 <div id="successScreen" style="display:none; text-align:center; padding:40px 20px;">
 <h2 style="color:#00ff99;">✅ Release Submitted</h2>
 <p style="margin-top:15px; color:#ccc;">
-Your files have been successfully delivered to Funk UNIVERSE.
+Your files have been successfully delivered to FUNK UNIVERSE.
 </p>
 <button onclick="location.reload()" style="
 margin-top:30px;
@@ -238,7 +238,50 @@ let trackInfo = "";
 
 const tracks = document.querySelectorAll(".track");
 
+const uploadPromises = [];
+
 for (let i = 0; i < tracks.length; i++) {
+
+  const inputs = tracks[i].querySelectorAll("input");
+  const title = inputs[0].value;
+  const version = inputs[1].value;
+  const fileInput = tracks[i].querySelector(".audioFile");
+
+  if (!fileInput.files[0]) {
+    alert("Audio file missing");
+    submitBtn.disabled = false;
+    return;
+  }
+
+  const promise = uploadFile(fileInput.files[0], "audio", (percent) => {
+    submitBtn.innerText = `Uploading Tracks... ${percent}%`;
+  }).then((audioUrl) => {
+
+    if (!audioUrl) throw new Error("upload failed");
+
+    return `
+Track ${i + 1}:
+Title: ${title}
+Version: ${version || "Original"}
+Audio: ${audioUrl}
+
+`;
+  });
+
+  uploadPromises.push(promise);
+}
+
+let results;
+
+try {
+  results = await Promise.all(uploadPromises);
+} catch {
+  alert("Audio upload failed");
+  submitBtn.disabled = false;
+  return;
+}
+
+let trackInfo = results.join("");
 
 const inputs = tracks[i].querySelectorAll("input");
 
