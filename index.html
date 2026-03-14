@@ -5,93 +5,95 @@
 <title>Release Delivery Portal</title>
 
 <style>
-body {
-  background:#0b0b0b;
-  color:white;
-  font-family:Arial, sans-serif;
-  margin:0;
-  padding:30px 15px;
+body{
+background:#0b0b0b;
+color:white;
+font-family:Arial;
+margin:0;
+padding:30px 15px;
 }
 
-.container {
-  max-width:650px;
-  margin:auto;
-  background:#151515;
-  padding:35px 25px;
-  border-radius:16px;
-  box-shadow:0 0 40px rgba(0,0,0,0.6);
+.container{
+max-width:650px;
+margin:auto;
+background:#151515;
+padding:35px 25px;
+border-radius:16px;
+box-shadow:0 0 40px rgba(0,0,0,0.6);
 }
 
-h1 {
-  text-align:center;
-  margin-bottom:25px;
-  font-size:24px;
-  font-weight:600;
+h1{
+text-align:center;
+margin-bottom:25px;
 }
 
-label {
-  display:block;
-  margin-top:18px;
-  margin-bottom:6px;
-  font-size:14px;
-  color:#ccc;
+label{
+display:block;
+margin-top:18px;
+margin-bottom:6px;
+font-size:14px;
+color:#ccc;
 }
 
-input, select {
-  width:100%;
-  padding:14px;
-  border-radius:10px;
-  border:none;
-  background:#222;
-  color:white;
-  font-size:14px;
+input,select{
+width:100%;
+padding:14px;
+border-radius:10px;
+border:none;
+background:#222;
+color:white;
 }
 
-.track {
-  background:#1c1c1c;
-  padding:18px;
-  border-radius:12px;
-  margin-top:20px;
+.track{
+background:#1c1c1c;
+padding:18px;
+border-radius:12px;
+margin-top:20px;
 }
 
-button {
-  width:100%;
-  padding:16px;
-  margin-top:25px;
-  border-radius:12px;
-  border:none;
-  background:#00ff99;
-  color:black;
-  font-weight:bold;
-  font-size:15px;
-  cursor:pointer;
+button{
+width:100%;
+padding:16px;
+margin-top:25px;
+border-radius:12px;
+border:none;
+background:#00ff99;
+color:black;
+font-weight:bold;
+cursor:pointer;
 }
 
-button:hover {
-  background:#00cc77;
+.progress{
+width:100%;
+background:#222;
+height:10px;
+border-radius:10px;
+margin-top:15px;
+overflow:hidden;
 }
 
-img.preview {
-  width:100%;
-  margin-top:15px;
-  border-radius:12px;
+.bar{
+height:10px;
+width:0%;
+background:#00ff99;
 }
 
-.logo {
-  width:120px;
-  display:block;
-  margin:0 auto 20px auto;
+.dropzone{
+border:2px dashed #444;
+padding:20px;
+text-align:center;
+border-radius:10px;
+color:#aaa;
 }
 
-.dropzone {
-  border:2px dashed #444;
-  padding:20px;
-  text-align:center;
-  border-radius:12px;
-  margin-top:10px;
-  color:#aaa;
+.logo{
+width:120px;
+display:block;
+margin:auto;
+margin-bottom:20px;
 }
 </style>
+
 </head>
 
 <body>
@@ -99,6 +101,7 @@ img.preview {
 <div class="container">
 
 <img src="logo.png" class="logo">
+
 <h1>Release Upload</h1>
 
 <form id="releaseForm">
@@ -109,17 +112,21 @@ img.preview {
 <label>Release Type</label>
 <select id="releaseType" required>
 <option value="">Select</option>
-<option value="Single">Single</option>
-<option value="EP">EP</option>
-<option value="Album">Album</option>
+<option>Single</option>
+<option>EP</option>
+<option>Album</option>
 </select>
 
 <div id="tracksContainer"></div>
 
-<label>Cover Artwork (3000x3000)</label>
+<label>Cover Artwork</label>
 <div class="dropzone" id="coverDrop">
-Drop artwork here or click
+Drop Artwork or Click
 <input type="file" id="coverArt" style="display:none" required>
+</div>
+
+<div class="progress">
+<div class="bar" id="progressBar"></div>
 </div>
 
 <button type="button" id="addTrackBtn">+ Add Another Track</button>
@@ -127,12 +134,10 @@ Drop artwork here or click
 
 </form>
 
-<div id="successScreen" style="display:none;text-align:center;padding:40px 20px;">
-<h2 style="color:#00ff99;">✅ Release Submitted</h2>
-<p style="color:#ccc;margin-top:10px;">Your files were delivered to Funk UNIVERSE</p>
-<button onclick="location.reload()" style="margin-top:20px;padding:12px 25px;border:none;border-radius:10px;background:#00ff99;font-weight:bold;">
-Submit Another Release
-</button>
+<div id="successScreen" style="display:none;text-align:center;">
+<h2 style="color:#00ff99;">Release Submitted ✅</h2>
+<p>Your files were delivered to Funk Universe.</p>
+<button onclick="location.reload()">Submit Another</button>
 </div>
 
 </div>
@@ -148,22 +153,11 @@ const releaseType=document.getElementById("releaseType");
 const form=document.getElementById("releaseForm");
 const submitBtn=document.getElementById("submitBtn");
 
-const coverDrop=document.getElementById("coverDrop");
-const coverInput=document.getElementById("coverArt");
+const progressBar=document.getElementById("progressBar");
 
-coverDrop.onclick=()=>coverInput.click();
-
-coverDrop.addEventListener("drop",e=>{
-e.preventDefault();
-coverInput.files=e.dataTransfer.files;
-coverDrop.innerText=e.dataTransfer.files[0].name;
-});
-
-coverDrop.addEventListener("dragover",e=>e.preventDefault());
-
-coverInput.addEventListener("change",()=>{
-coverDrop.innerText=coverInput.files[0].name;
-});
+function setProgress(p){
+progressBar.style.width=p+"%";
+}
 
 function addTrack(){
 
@@ -178,31 +172,10 @@ div.innerHTML=`
 <input type="text">
 
 <label>Audio File</label>
-
-<div class="dropzone">
-Drop audio here or click
-<input type="file" class="audioFile" style="display:none" required>
-</div>
+<input type="file" class="audioFile" required>
 `;
 
 tracksContainer.appendChild(div);
-
-const drop=div.querySelector(".dropzone");
-const input=div.querySelector(".audioFile");
-
-drop.onclick=()=>input.click();
-
-drop.addEventListener("dragover",e=>e.preventDefault());
-
-drop.addEventListener("drop",e=>{
-e.preventDefault();
-input.files=e.dataTransfer.files;
-drop.innerText=e.dataTransfer.files[0].name;
-});
-
-input.addEventListener("change",()=>{
-drop.innerText=input.files[0].name;
-});
 
 }
 
@@ -213,53 +186,66 @@ addTrack();
 
 addTrackBtn.addEventListener("click",addTrack);
 
-function uploadFile(file,type,progressCallback){
+function uploadFile(file){
 
 return new Promise(resolve=>{
 
-const resourceType=type==="image"?"image":"video";
-
 const xhr=new XMLHttpRequest();
 
-const url=`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
+const url=`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
 
 const formData=new FormData();
+
 formData.append("file",file);
 formData.append("upload_preset",UPLOAD_PRESET);
 
 xhr.upload.onprogress=e=>{
+
 if(e.lengthComputable){
+
 const percent=Math.round((e.loaded/e.total)*100);
-progressCallback(percent);
+
+setProgress(percent);
+
 }
+
 };
 
 xhr.onload=()=>{
+
 try{
+
 const res=JSON.parse(xhr.responseText);
+
 resolve(res.secure_url);
+
 }catch{
+
 resolve(null);
+
 }
+
 };
 
 xhr.onerror=()=>resolve(null);
 
 xhr.open("POST",url);
+
 xhr.send(formData);
 
 });
 
 }
 
-form.addEventListener("submit",async(e)=>{
+form.addEventListener("submit",async e=>{
 
 e.preventDefault();
 
 submitBtn.disabled=true;
-submitBtn.innerText="Starting Upload...";
+submitBtn.innerText="Uploading...";
 
 let trackInfo="";
+
 const tracks=document.querySelectorAll(".track");
 
 for(let i=0;i<tracks.length;i++){
@@ -268,33 +254,27 @@ const inputs=tracks[i].querySelectorAll("input");
 
 const title=inputs[0].value;
 const version=inputs[1].value;
-const audioInput=tracks[i].querySelector(".audioFile");
+const audio=tracks[i].querySelector(".audioFile").files[0];
 
-const file=audioInput.files[0];
-
-if(!file){
-alert("Audio missing");
-return;
-}
-
-const audioUrl=await uploadFile(file,"audio",percent=>{
-submitBtn.innerText=`Uploading Audio ${percent}%`;
-});
+const audioUrl=await uploadFile(audio);
 
 if(!audioUrl){
 alert("Audio upload failed");
 return;
 }
 
-trackInfo+=`Track ${i+1}\nTitle:${title}\nVersion:${version}\nAudio:${audioUrl}\n\n`;
+trackInfo+=`
+Track ${i+1}
+Title: ${title}
+Version: ${version}
+Audio: ${audioUrl}
+`;
 
 }
 
-const coverFile=coverInput.files[0];
+const coverFile=document.getElementById("coverArt").files[0];
 
-const coverUrl=await uploadFile(coverFile,"image",percent=>{
-submitBtn.innerText=`Uploading Cover ${percent}%`;
-});
+const coverUrl=await uploadFile(coverFile);
 
 const data=new FormData();
 
@@ -307,10 +287,33 @@ fetch("https://formspree.io/f/mzzrkpqj",{
 method:"POST",
 body:data,
 headers:{Accept:"application/json"}
-}).catch(()=>{});
+});
 
 form.style.display="none";
 document.getElementById("successScreen").style.display="block";
+
+});
+
+const coverDrop=document.getElementById("coverDrop");
+const coverInput=document.getElementById("coverArt");
+
+coverDrop.onclick=()=>coverInput.click();
+
+coverDrop.addEventListener("dragover",e=>e.preventDefault());
+
+coverDrop.addEventListener("drop",e=>{
+
+e.preventDefault();
+
+coverInput.files=e.dataTransfer.files;
+
+coverDrop.innerText=e.dataTransfer.files[0].name;
+
+});
+
+coverInput.addEventListener("change",()=>{
+
+coverDrop.innerText=coverInput.files[0].name;
 
 });
 
