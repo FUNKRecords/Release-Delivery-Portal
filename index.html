@@ -82,6 +82,15 @@ img.preview {
   display:block;
   margin:0 auto 20px auto;
 }
+
+.dropzone {
+  border:2px dashed #444;
+  padding:20px;
+  text-align:center;
+  border-radius:12px;
+  margin-top:10px;
+  color:#aaa;
+}
 </style>
 </head>
 <body>
@@ -93,46 +102,53 @@ img.preview {
 
 <form id="releaseForm">
 
+<label>Artist Name</label>
+<input type="text" id="artistName" required>
+
 <label>Release Type</label>
 <select id="releaseType" required>
-  <option value="">Select</option>
-  <option value="Single">Single</option>
-  <option value="EP">EP</option>
-  <option value="Album">Album</option>
+<option value="">Select</option>
+<option value="Single">Single</option>
+<option value="EP">EP</option>
+<option value="Album">Album</option>
 </select>
 
 <div id="tracksContainer"></div>
 
 <label>Cover Artwork (3000x3000)</label>
-<input type="file" id="coverArt" required>
+<div class="dropzone" id="coverDrop">
+Drop artwork here or click to upload
+<input type="file" id="coverArt" style="display:none;" required>
+</div>
 
 <button type="button" id="addTrackBtn">+ Add Another Track</button>
-
 <button type="submit" id="submitBtn">Send Release 🚀</button>
 
 </form>
 
-<!-- SUCCESS SCREEN -->
 <div id="successScreen" style="display:none; text-align:center; padding:40px 20px;">
-  <h2 style="color:#00ff99;">✅ Release Submitted</h2>
-  <p style="margin-top:15px; color:#ccc;">
-    Your files have been successfully delivered to Funk UNIVERSE.
-  </p>
-  <button onclick="location.reload()" style="
-    margin-top:30px;
-    padding:14px 25px;
-    border:none;
-    border-radius:10px;
-    background:#00ff99;
-    font-weight:bold;
-    cursor:pointer;">
-    Submit Another Release
-  </button>
+<h2 style="color:#00ff99;">✅ Release Submitted</h2>
+<p style="margin-top:15px; color:#ccc;">
+Your files have been successfully delivered to Funk UNIVERSE.
+</p>
+<button onclick="location.reload()" style="
+margin-top:30px;
+padding:14px 25px;
+border:none;
+border-radius:10px;
+background:#00ff99;
+font-weight:bold;
+cursor:pointer;">
+Submit Another Release
+</button>
 </div>
 
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
+
 const CLOUD_NAME = "djpeitfan";
 const UPLOAD_PRESET = "label_upload";
 
@@ -142,140 +158,226 @@ const addTrackBtn = document.getElementById("addTrackBtn");
 const form = document.getElementById("releaseForm");
 const submitBtn = document.getElementById("submitBtn");
 
-function addTrack() {
-  const div = document.createElement("div");
-  div.className = "track";
-  div.innerHTML = `
-    <label>Track Title</label>
-    <input type="text" required>
+const coverDrop = document.getElementById("coverDrop");
+const coverInput = document.getElementById("coverArt");
 
-    <label>Version Name (optional)</label>
-    <input type="text">
+coverDrop.onclick = () => coverInput.click();
 
-    <label>Audio File</label>
-    <input type="file" class="audioFile" required>
-  `;
-  tracksContainer.appendChild(div);
-}
-
-releaseType.addEventListener("change", () => {
-  tracksContainer.innerHTML = "";
-  addTrack();
+coverDrop.addEventListener("dragover", e => {
+e.preventDefault();
+coverDrop.style.borderColor="#00ff99";
 });
 
-addTrackBtn.addEventListener("click", addTrack);
+coverDrop.addEventListener("dragleave", () => {
+coverDrop.style.borderColor="#444";
+});
 
-function uploadFile(file, type, progressCallback) {
-  return new Promise((resolve) => {
+coverDrop.addEventListener("drop", e => {
+e.preventDefault();
+coverInput.files = e.dataTransfer.files;
+coverDrop.innerText = e.dataTransfer.files[0].name;
+});
 
-    const resourceType = type === "image" ? "image" : "raw";
-    const xhr = new XMLHttpRequest();
-    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
+coverInput.addEventListener("change", ()=>{
+coverDrop.innerText = coverInput.files[0].name;
+});
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
+function addTrack(){
 
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && progressCallback) {
-        const percent = Math.round((e.loaded / e.total) * 100);
-        progressCallback(percent);
-      }
-    };
+const div = document.createElement("div");
+div.className="track";
 
-    xhr.onload = () => {
-      try {
-        const res = JSON.parse(xhr.responseText);
-        resolve(res.secure_url || null);
-      } catch {
-        resolve(null);
-      }
-    };
+div.innerHTML=`
+<label>Track Title</label>
+<input type="text" required>
 
-    xhr.onerror = () => resolve(null);
+<label>Version Name (optional)</label>
+<input type="text">
 
-    xhr.open("POST", url);
-    xhr.send(formData);
-  });
+<label>Audio File</label>
+
+<div class="dropzone">
+Drop audio here or click
+<input type="file" class="audioFile" style="display:none;" required>
+</div>
+`;
+
+tracksContainer.appendChild(div);
+
+const drop = div.querySelector(".dropzone");
+const input = div.querySelector(".audioFile");
+
+drop.onclick = () => input.click();
+
+drop.addEventListener("dragover", e=>{
+e.preventDefault();
+drop.style.borderColor="#00ff99";
+});
+
+drop.addEventListener("dragleave", ()=>{
+drop.style.borderColor="#444";
+});
+
+drop.addEventListener("drop", e=>{
+e.preventDefault();
+input.files = e.dataTransfer.files;
+drop.innerText = e.dataTransfer.files[0].name;
+});
+
+input.addEventListener("change", ()=>{
+drop.innerText = input.files[0].name;
+});
+
 }
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  submitBtn.disabled = true;
-  submitBtn.innerText = "Uploading...";
-
-  let trackInfo = "";
-  const tracks = document.querySelectorAll(".track");
-
-  for (let i = 0; i < tracks.length; i++) {
-
-    const inputs = tracks[i].querySelectorAll("input");
-    const title = inputs[0].value;
-    const version = inputs[1].value;
-    const fileInput = tracks[i].querySelector(".audioFile");
-
-    if (!fileInput.files[0]) {
-      alert("Audio file missing");
-      submitBtn.disabled = false;
-      return;
-    }
-
-    const audioUrl = await uploadFile(fileInput.files[0], "audio", (percent) => {
-      submitBtn.innerText = `Uploading Audio... ${percent}%`;
-    });
-
-    if (!audioUrl) {
-      alert("Audio upload failed");
-      submitBtn.disabled = false;
-      return;
-    }
-
-    trackInfo += `Track ${i + 1}:\n`;
-    trackInfo += `Title: ${title}\n`;
-    trackInfo += `Version: ${version || "Original"}\n`;
-    trackInfo += `Audio: ${audioUrl}\n\n`;
-  }
-
-  const coverInput = document.getElementById("coverArt");
-
-  if (!coverInput.files[0]) {
-    alert("Cover art missing");
-    submitBtn.disabled = false;
-    return;
-  }
-
-  const coverUrl = await uploadFile(coverInput.files[0], "image", (percent) => {
-    submitBtn.innerText = `Uploading Cover... ${percent}%`;
-  });
-
-  if (!coverUrl) {
-    alert("Cover upload failed");
-    submitBtn.disabled = false;
-    return;
-  }
-
-  const preview = document.createElement("img");
-  preview.src = coverUrl;
-  preview.className = "preview";
-  tracksContainer.appendChild(preview);
-
-  const data = new FormData();
-  data.append("release_type", releaseType.value);
-  data.append("tracks", trackInfo);
-  data.append("cover_art", coverUrl);
-
-  fetch("https://formspree.io/f/mzzrkpqj", {
-  method: "POST",
-  body: data,
-  headers: {
-    'Accept': 'application/json'
-  }
-}).catch(() => {});
-
-form.style.display = "none";
-document.getElementById("successScreen").style.display = "block";
+releaseType.addEventListener("change",()=>{
+tracksContainer.innerHTML="";
+addTrack();
 });
+
+addTrackBtn.addEventListener("click",addTrack);
+
+function uploadFile(file,type,progressCallback){
+
+return new Promise((resolve)=>{
+
+const resourceType = type==="image"?"image":"video";
+
+const url=`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
+
+const xhr=new XMLHttpRequest();
+
+const formData=new FormData();
+
+formData.append("file",file);
+formData.append("upload_preset",UPLOAD_PRESET);
+
+xhr.timeout=0;
+
+xhr.upload.onprogress=(e)=>{
+if(e.lengthComputable && progressCallback){
+const percent=Math.round((e.loaded/e.total)*100);
+progressCallback(percent);
+}
+};
+
+xhr.onreadystatechange=()=>{
+if(xhr.readyState===4){
+try{
+const res=JSON.parse(xhr.responseText);
+resolve(res.secure_url || null);
+}catch{
+resolve(null);
+}
+}
+};
+
+xhr.onerror=()=>resolve(null);
+
+xhr.open("POST",url,true);
+xhr.send(formData);
+
+});
+
+}
+
+form.addEventListener("submit", async (e)=>{
+
+e.preventDefault();
+
+submitBtn.disabled=true;
+submitBtn.innerText="Preparing Upload...";
+
+const artist=document.getElementById("artistName").value;
+
+const tracks=document.querySelectorAll(".track");
+
+const zip=new JSZip();
+
+let trackInfo="";
+
+for(let i=0;i<tracks.length;i++){
+
+const inputs=tracks[i].querySelectorAll("input");
+
+const title=inputs[0].value;
+const version=inputs[1].value;
+const fileInput=tracks[i].querySelector(".audioFile");
+
+if(!fileInput.files[0]){
+alert("Audio file missing");
+submitBtn.disabled=false;
+return;
+}
+
+const file=fileInput.files[0];
+
+zip.file(file.name,file);
+
+submitBtn.innerText=`Uploading ${file.name}...`;
+
+const audioUrl=await uploadFile(file,"audio",(percent)=>{
+submitBtn.innerText=`Uploading Audio ${percent}%`;
+});
+
+if(!audioUrl){
+alert("Audio upload failed");
+submitBtn.disabled=false;
+return;
+}
+
+trackInfo+=`Track ${i+1}\n`;
+trackInfo+=`Title: ${title}\n`;
+trackInfo+=`Version: ${version||"Original"}\n`;
+trackInfo+=`Audio: ${audioUrl}\n\n`;
+
+}
+
+if(!coverInput.files[0]){
+alert("Cover art missing");
+submitBtn.disabled=false;
+return;
+}
+
+const coverFile=coverInput.files[0];
+
+zip.file(coverFile.name,coverFile);
+
+const coverUrl=await uploadFile(coverFile,"image",(percent)=>{
+submitBtn.innerText=`Uploading Cover ${percent}%`;
+});
+
+if(!coverUrl){
+alert("Cover upload failed");
+submitBtn.disabled=false;
+return;
+}
+
+submitBtn.innerText="Creating Backup ZIP...";
+
+const zipBlob=await zip.generateAsync({type:"blob"});
+
+const zipUrl=await uploadFile(zipBlob,"audio");
+
+const data=new FormData();
+
+data.append("artist",artist);
+data.append("release_type",releaseType.value);
+data.append("tracks",trackInfo);
+data.append("cover_art",coverUrl);
+data.append("backup_zip",zipUrl);
+
+fetch("https://formspree.io/f/mzzrkpqj",{
+method:"POST",
+body:data,
+headers:{'Accept':'application/json'}
+}).catch(()=>{});
+
+form.style.display="none";
+document.getElementById("successScreen").style.display="block";
+
+});
+
 </script>
 
 </body>
