@@ -141,7 +141,7 @@ const addTrackBtn = document.getElementById("addTrackBtn");
 const form = document.getElementById("releaseForm");
 const submitBtn = document.getElementById("submitBtn");
 
-function addTrack() {
+function addTrack(){
 
 const div = document.createElement("div");
 div.className = "track";
@@ -154,63 +154,64 @@ div.innerHTML = `
 <input type="text">
 
 <label>Audio File</label>
-<input type="file" class="audioFile" required>
+<input type="file" class="audioFile" accept=".wav,.mp3,.flac,.aiff" required>
 `;
 
 tracksContainer.appendChild(div);
+
 }
 
-releaseType.addEventListener("change", () => {
-tracksContainer.innerHTML = "";
+releaseType.addEventListener("change",()=>{
+
+tracksContainer.innerHTML="";
 addTrack();
+
 });
 
-addTrackBtn.addEventListener("click", addTrack);
+addTrackBtn.addEventListener("click",addTrack);
 
-function uploadFile(file, type, progressCallback) {
+function uploadFile(file,type,progressCallback){
 
-return new Promise((resolve) => {
+return new Promise((resolve)=>{
 
-const resourceType = type === "image" ? "image" : "video";
+const resourceType = type==="image" ? "image" : "video";
 const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
 
 const xhr = new XMLHttpRequest();
 xhr.timeout = 0;
 
 const formData = new FormData();
-formData.append("file", file);
-formData.append("upload_preset", UPLOAD_PRESET);
+formData.append("file",file);
+formData.append("upload_preset",UPLOAD_PRESET);
 
-xhr.upload.onprogress = (e) => {
+xhr.upload.onprogress=(e)=>{
 
-if (e.lengthComputable && progressCallback) {
+if(e.lengthComputable && progressCallback){
 
-const percent = Math.round((e.loaded / e.total) * 100);
+const percent=Math.round((e.loaded/e.total)*100);
 progressCallback(percent);
 
 }
 
 };
 
-xhr.onload = () => {
+xhr.onload=()=>{
 
-if (xhr.status === 200) {
+if(xhr.status===200){
 
-try {
+try{
 
-const res = JSON.parse(xhr.responseText);
+const res=JSON.parse(xhr.responseText);
 
-if (res.secure_url) resolve(res.secure_url);
-else if (res.url) resolve(res.url);
-else resolve(null);
+resolve(res.secure_url || res.url || null);
 
-} catch {
+}catch{
 
 resolve(null);
 
 }
 
-} else {
+}else{
 
 resolve(null);
 
@@ -218,156 +219,109 @@ resolve(null);
 
 };
 
-xhr.onerror = () => resolve(null);
+xhr.onerror=()=>resolve(null);
 
-xhr.open("POST", url);
+xhr.open("POST",url);
 xhr.send(formData);
 
 });
 
 }
 
-form.addEventListener("submit", async (e) => {
+form.addEventListener("submit",async(e)=>{
 
 e.preventDefault();
 
-submitBtn.disabled = true;
-submitBtn.innerText = "Uploading...";
+submitBtn.disabled=true;
+submitBtn.innerText="Uploading Tracks...";
 
-let trackInfo = "";
+const tracks=document.querySelectorAll(".track");
 
-const tracks = document.querySelectorAll(".track");
+let trackInfo="";
 
-const uploadPromises = [];
+for(let i=0;i<tracks.length;i++){
 
-for (let i = 0; i < tracks.length; i++) {
+const inputs=tracks[i].querySelectorAll("input");
 
-  const inputs = tracks[i].querySelectorAll("input");
-  const title = inputs[0].value;
-  const version = inputs[1].value;
-  const fileInput = tracks[i].querySelector(".audioFile");
+const title=inputs[0].value;
+const version=inputs[1].value;
+const fileInput=tracks[i].querySelector(".audioFile");
 
-  if (!fileInput.files[0]) {
-    alert("Audio file missing");
-    submitBtn.disabled = false;
-    return;
-  }
-
-  const promise = uploadFile(fileInput.files[0], "audio", (percent) => {
-    submitBtn.innerText = `Uploading Tracks... ${percent}%`;
-  }).then((audioUrl) => {
-
-    if (!audioUrl) throw new Error("upload failed");
-
-    return `
-Track ${i + 1}:
-Title: ${title}
-Version: ${version || "Original"}
-Audio: ${audioUrl}
-
-`;
-  });
-
-  uploadPromises.push(promise);
-}
-
-let results;
-
-try {
-  results = await Promise.all(uploadPromises);
-} catch {
-  alert("Audio upload failed");
-  submitBtn.disabled = false;
-  return;
-}
-
-let trackInfo = results.join("");
-
-const inputs = tracks[i].querySelectorAll("input");
-
-const title = inputs[0].value;
-const version = inputs[1].value;
-
-const fileInput = tracks[i].querySelector(".audioFile");
-
-if (!fileInput.files[0]) {
+if(!fileInput.files[0]){
 
 alert("Audio file missing");
-submitBtn.disabled = false;
+submitBtn.disabled=false;
 return;
 
 }
 
-const audioUrl = await uploadFile(fileInput.files[0], "audio", (percent) => {
+const audioUrl=await uploadFile(fileInput.files[0],"audio",(percent)=>{
 
-submitBtn.innerText = `Uploading Audio... ${percent}%`;
+submitBtn.innerText=`Uploading Track ${i+1}... ${percent}%`;
 
 });
 
-if (!audioUrl) {
+if(!audioUrl){
 
 alert("Audio upload failed");
-submitBtn.disabled = false;
+submitBtn.disabled=false;
 return;
 
 }
 
-trackInfo += `Track ${i + 1}:\n`;
-trackInfo += `Title: ${title}\n`;
-trackInfo += `Version: ${version || "Original"}\n`;
-trackInfo += `Audio: ${audioUrl}\n\n`;
+trackInfo+=`Track ${i+1}:\n`;
+trackInfo+=`Title: ${title}\n`;
+trackInfo+=`Version: ${version || "Original"}\n`;
+trackInfo+=`Audio: ${audioUrl}\n\n`;
 
 }
 
-const coverInput = document.getElementById("coverArt");
+const coverInput=document.getElementById("coverArt");
 
-if (!coverInput.files[0]) {
+if(!coverInput.files[0]){
 
 alert("Cover art missing");
-submitBtn.disabled = false;
+submitBtn.disabled=false;
 return;
 
 }
 
-const coverUrl = await uploadFile(coverInput.files[0], "image", (percent) => {
+const coverUrl=await uploadFile(coverInput.files[0],"image",(percent)=>{
 
-submitBtn.innerText = `Uploading Cover... ${percent}%`;
+submitBtn.innerText=`Uploading Cover... ${percent}%`;
 
 });
 
-if (!coverUrl) {
+if(!coverUrl){
 
 alert("Cover upload failed");
-submitBtn.disabled = false;
+submitBtn.disabled=false;
 return;
 
 }
 
-const preview = document.createElement("img");
-preview.src = coverUrl;
-preview.className = "preview";
-
+const preview=document.createElement("img");
+preview.src=coverUrl;
+preview.className="preview";
 tracksContainer.appendChild(preview);
 
-const data = new FormData();
+const data=new FormData();
 
-data.append("release_type", releaseType.value);
-data.append("tracks", trackInfo);
-data.append("cover_art", coverUrl);
+data.append("release_type",releaseType.value);
+data.append("tracks",trackInfo);
+data.append("cover_art",coverUrl);
 
-fetch("https://formspree.io/f/mzzrkpqj", {
+fetch("https://formspree.io/f/mzzrkpqj",{
+method:"POST",
+body:data,
+headers:{'Accept':'application/json'}
+}).catch(()=>{});
 
-method: "POST",
-body: data,
-headers: { 'Accept': 'application/json' }
-
-}).catch(() => {});
-
-form.style.display = "none";
-document.getElementById("successScreen").style.display = "block";
+form.style.display="none";
+document.getElementById("successScreen").style.display="block";
 
 });
 </script>
 
 </body>
-  </html>
+</html>
