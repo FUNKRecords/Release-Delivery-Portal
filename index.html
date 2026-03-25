@@ -1,327 +1,1166 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Release Delivery Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funk Universe — Release Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #080808;
+  --surface: #101010;
+  --card: #161616;
+  --border: #242424;
+  --green: #00ff88;
+  --green-dim: #00ff8822;
+  --green-mid: #00cc6a;
+  --text: #f0f0f0;
+  --muted: #666;
+  --danger: #ff4466;
+}
+
+html { scroll-behavior: smooth; }
+
 body {
-  background:#0b0b0b;
-  color:white;
-  font-family:Arial, sans-serif;
-  margin:0;
-  padding:30px 15px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-.container {
-  max-width:650px;
-  margin:auto;
-  background:#151515;
-  padding:35px 25px;
-  border-radius:16px;
-  box-shadow:0 0 40px rgba(0,0,0,0.6);
+/* ── Background grain ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
 }
 
-h1 {
-  text-align:center;
-  margin-bottom:25px;
-  font-size:24px;
-  font-weight:600;
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 40px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
 }
 
-label {
-  display:block;
-  margin-top:18px;
-  margin-bottom:6px;
-  font-size:14px;
-  color:#ccc;
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-input, select {
-  width:100%;
-  padding:14px;
-  border-radius:10px;
-  border:none;
-  background:#222;
-  color:white;
-  font-size:14px;
+.logo-mark {
+  width: 38px;
+  height: 38px;
+  background: var(--green);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #000;
+  font-weight: 800;
+  flex-shrink: 0;
 }
 
-.track {
-  background:#1c1c1c;
-  padding:18px;
-  border-radius:12px;
-  margin-top:20px;
+.logo-text {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text);
+  line-height: 1.3;
 }
 
-button {
-  width:100%;
-  padding:16px;
-  margin-top:25px;
-  border-radius:12px;
-  border:none;
-  background:#00ff99;
-  color:black;
-  font-weight:bold;
-  font-size:15px;
-  cursor:pointer;
+.logo-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.12em;
 }
 
-button:hover {
-  background:#00cc77;
+.header-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  border: 1px solid var(--green);
+  padding: 5px 12px;
+  border-radius: 100px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-img.preview {
-  width:100%;
-  margin-top:15px;
-  border-radius:12px;
+/* ── Main layout ── */
+.main {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
 }
 
-.logo {
-  width:120px;
-  display:block;
-  margin:0 auto 20px auto;
+.page-title {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.page-title span { color: var(--green); }
+
+.page-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  margin-bottom: 48px;
+}
+
+/* ── Step indicator ── */
+.steps {
+  display: flex;
+  gap: 0;
+  margin-bottom: 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.step {
+  flex: 1;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  transition: all 0.3s;
+}
+
+.step:last-child { border-right: none; }
+
+.step.active {
+  background: var(--green-dim);
+}
+
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.step.active .step-num {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-dim);
+}
+
+.step.done .step-num {
+  background: var(--green);
+  border-color: var(--green);
+  color: #000;
+  font-weight: 700;
+}
+
+.step-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: color 0.3s;
+}
+
+.step.active .step-label { color: var(--green); }
+.step.done .step-label { color: var(--text); }
+
+/* ── Form card ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Field ── */
+.field {
+  margin-bottom: 20px;
+}
+
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.field input[type="text"],
+.field select {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+}
+
+.field input[type="text"]:focus,
+.field select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-dim);
+}
+
+.field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.field select option {
+  background: var(--card);
+}
+
+/* ── File drop zone ── */
+.drop-zone {
+  width: 100%;
+  border: 1.5px dashed var(--border);
+  border-radius: 12px;
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+
+.drop-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.drop-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+  display: block;
+  line-height: 1;
+}
+
+.drop-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.drop-hint {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.file-chosen {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  display: none;
+}
+
+.file-chosen.show { display: flex; }
+
+.file-size {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  opacity: 0.7;
+}
+
+/* ── Track card ── */
+.track-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 16px;
+  position: relative;
+  transition: border-color 0.2s;
+  animation: slideIn 0.3s ease;
+}
+
+.track-card:hover { border-color: #333; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.track-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.track-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--green);
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  border-opacity: 0.3;
+  padding: 4px 10px;
+  border-radius: 100px;
+  letter-spacing: 0.1em;
+}
+
+.remove-track {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 50%;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+  line-height: 1;
+  padding: 0;
+}
+
+.remove-track:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: #ff446611;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 520px) {
+  .field-row { grid-template-columns: 1fr; }
+}
+
+/* ── Progress bar ── */
+.upload-progress {
+  margin-top: 10px;
+  display: none;
+}
+
+.upload-progress.show { display: block; }
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.progress-bar-wrap {
+  height: 4px;
+  background: var(--border);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 100px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-bar-fill.done {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+/* ── Add track button ── */
+.add-track-btn {
+  width: 100%;
+  padding: 16px;
+  background: transparent;
+  border: 1.5px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 12px;
+}
+
+.add-track-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-dim);
+}
+
+/* ── Artwork preview ── */
+.artwork-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 2px solid var(--green);
+  display: none;
+  margin-top: 12px;
+}
+
+.artwork-preview.show { display: block; }
+
+/* ── Submit button ── */
+.submit-btn {
+  width: 100%;
+  padding: 18px;
+  background: var(--green);
+  color: #000;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.submit-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #00ffaa;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(0,255,136,0.3);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Global upload status ── */
+.global-status {
+  display: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  margin-top: 20px;
+}
+
+.global-status.show { display: block; }
+
+.status-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.status-item:last-child { border-bottom: none; }
+
+.status-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+  background: var(--border);
+  color: var(--muted);
+}
+
+.status-icon.uploading {
+  border: 2px solid var(--green);
+  background: transparent;
+  animation: spin 1s linear infinite;
+}
+
+.status-icon.done {
+  background: var(--green);
+  color: #000;
+}
+
+.status-icon.error {
+  background: var(--danger);
+  color: #fff;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.status-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.status-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--green);
+}
+
+/* ── Error message ── */
+.error-msg {
+  display: none;
+  background: #ff446611;
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.error-msg.show { display: block; }
+
+/* ── Success screen ── */
+.success-screen {
+  display: none;
+  text-align: center;
+  padding: 60px 24px;
+  animation: fadeUp 0.5s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.success-ring {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--green-dim);
+  border: 2px solid var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin: 0 auto 28px;
+  box-shadow: 0 0 40px rgba(0,255,136,0.2);
+}
+
+.success-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.success-title span { color: var(--green); }
+
+.success-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 40px;
+  line-height: 1.8;
+}
+
+.success-btn {
+  padding: 16px 36px;
+  background: var(--green);
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.success-btn:hover {
+  background: #00ffaa;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,255,136,0.3);
+}
+
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  padding: 32px;
+  border-top: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
 }
 </style>
 </head>
 <body>
 
-<div class="container">
+<!-- Header -->
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-mark">F</div>
+    <div>
+      <div class="logo-text">Funk Universe</div>
+      <div class="logo-sub">Label Distribution</div>
+    </div>
+  </div>
+  <div class="header-badge">● Secure Portal</div>
+</header>
 
-<img src="logo.png" class="logo" alt="Funk Universe Logo">
-<h1>Release Upload</h1>
+<!-- Main -->
+<main class="main" id="mainForm">
 
-<form id="releaseForm">
+  <h1 class="page-title">Submit Your<br><span>Release</span></h1>
+  <p class="page-sub">// Upload tracks, artwork & metadata</p>
 
-<label>Release Type</label>
-<select id="releaseType" required>
-<option value="">Select</option>
-<option value="Single">Single</option>
-<option value="EP">EP</option>
-<option value="Album">Album</option>
-</select>
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      <div class="step-label">Type</div>
+    </div>
+    <div class="step" id="step2">
+      <div class="step-num">2</div>
+      <div class="step-label">Tracks</div>
+    </div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      <div class="step-label">Artwork</div>
+    </div>
+    <div class="step" id="step4">
+      <div class="step-num">4</div>
+      <div class="step-label">Submit</div>
+    </div>
+  </div>
 
-<div id="tracksContainer"></div>
+  <!-- Error banner -->
+  <div class="error-msg" id="errorMsg"></div>
 
-<label>Cover Artwork (3000x3000)</label>
-<input type="file" id="coverArt" required>
+  <!-- Release type -->
+  <div class="card" id="cardType">
+    <div class="card-title">Release Type</div>
+    <div class="field">
+      <label>What are you submitting?</label>
+      <select id="releaseType" required>
+        <option value="">— Select release type —</option>
+        <option value="Single">Single (1 track)</option>
+        <option value="EP">EP (2–6 tracks)</option>
+        <option value="Album">Album (7+ tracks)</option>
+      </select>
+    </div>
+  </div>
 
-<button type="button" id="addTrackBtn">+ Add Another Track</button>
+  <!-- Tracks -->
+  <div class="card" id="cardTracks" style="display:none">
+    <div class="card-title">Tracks</div>
+    <div id="tracksContainer"></div>
+    <button class="add-track-btn" id="addTrackBtn" type="button">+ Add Another Track</button>
+  </div>
 
-<button type="submit" id="submitBtn">Send Release 🚀</button>
+  <!-- Artwork -->
+  <div class="card" id="cardArtwork" style="display:none">
+    <div class="card-title">Cover Artwork</div>
+    <div class="field">
+      <label>Cover Image (3000×3000px recommended)</label>
+      <div class="drop-zone" id="artworkZone">
+        <input type="file" id="coverArt" accept="image/jpeg,image/png,image/webp">
+        <span class="drop-icon">🖼️</span>
+        <div class="drop-text">Drop artwork here or click to browse</div>
+        <div class="drop-hint">JPG · PNG · WEBP · 3000×3000px</div>
+      </div>
+      <div class="file-chosen" id="artworkChosen">
+        <span id="artworkName">—</span>
+        <span class="file-size" id="artworkSize"></span>
+      </div>
+      <img class="artwork-preview" id="artworkPreview">
+    </div>
+  </div>
 
-</form>
+  <!-- Submit -->
+  <div id="cardSubmit" style="display:none">
+    <button class="submit-btn" id="submitBtn" type="button">
+      Send Release to FUNK UNIVERSE
+    </button>
+  </div>
 
-<div id="successScreen" style="display:none; text-align:center; padding:40px 20px;">
-<h2 style="color:#00ff99;">✅ Release Submitted</h2>
-<p style="margin-top:15px; color:#ccc;">
-Your files have been successfully delivered to FUNK UNIVERSE.
-</p>
-<button onclick="location.reload()" style="
-margin-top:30px;
-padding:14px 25px;
-border:none;
-border-radius:10px;
-background:#00ff99;
-font-weight:bold;
-cursor:pointer;">
-Submit Another Release
-</button>
+  <!-- Upload status panel -->
+  <div class="global-status" id="globalStatus">
+    <div class="status-title">Upload Progress</div>
+    <div id="statusList"></div>
+  </div>
+
+</main>
+
+<!-- Success -->
+<div class="success-screen" id="successScreen">
+  <div class="success-ring">✓</div>
+  <h2 class="success-title">Release<br><span>Delivered</span></h2>
+  <p class="success-sub">
+    Your files are on their way to FUNK UNIVERSE.<br>
+    The team will review and confirm shortly.
+  </p>
+  <button class="success-btn" onclick="location.reload()">Submit Another Release</button>
 </div>
 
-</div>
+<!-- Footer -->
+<footer class="footer">FUNK UNIVERSE © 2026 — Release Portal</footer>
 
 <script>
-const CLOUD_NAME = "djpeitfan";
+// ─── Config ───────────────────────────────────────────
+const CLOUD_NAME   = "djpeitfan";
 const UPLOAD_PRESET = "label_upload";
+const FORMSPREE    = "https://formspree.io/f/mzzrkpqj";
 
-const releaseType = document.getElementById("releaseType");
+// ─── State ────────────────────────────────────────────
+let trackCount = 0;
+
+// ─── DOM refs ─────────────────────────────────────────
+const releaseType    = document.getElementById("releaseType");
 const tracksContainer = document.getElementById("tracksContainer");
-const addTrackBtn = document.getElementById("addTrackBtn");
-const form = document.getElementById("releaseForm");
-const submitBtn = document.getElementById("submitBtn");
+const addTrackBtn    = document.getElementById("addTrackBtn");
+const submitBtn      = document.getElementById("submitBtn");
+const errorMsg       = document.getElementById("errorMsg");
+const globalStatus   = document.getElementById("globalStatus");
+const statusList     = document.getElementById("statusList");
 
-function addTrack(){
-
-const div = document.createElement("div");
-div.className = "track";
-
-div.innerHTML = `
-<label>Track Title</label>
-<input type="text" required>
-
-<label>Version Name (optional)</label>
-<input type="text">
-
-<label>Audio File</label>
-<input type="file" class="audioFile" accept=".wav,.mp3,.flac,.aiff" required>
-`;
-
-tracksContainer.appendChild(div);
-
+// ─── Show/hide steps ──────────────────────────────────
+function setStepDone(n) {
+  const s = document.getElementById("step"+n);
+  s.classList.remove("active");
+  s.classList.add("done");
+  s.querySelector(".step-num").textContent = "✓";
+}
+function setStepActive(n) {
+  document.getElementById("step"+n).classList.add("active");
 }
 
-releaseType.addEventListener("change",()=>{
-
-tracksContainer.innerHTML="";
-addTrack();
-
+// ─── Release type change ──────────────────────────────
+releaseType.addEventListener("change", () => {
+  if (!releaseType.value) return;
+  tracksContainer.innerHTML = "";
+  trackCount = 0;
+  addTrack();
+  document.getElementById("cardTracks").style.display  = "block";
+  document.getElementById("cardArtwork").style.display = "block";
+  document.getElementById("cardSubmit").style.display  = "block";
+  setStepDone(1);
+  setStepActive(2);
 });
 
-addTrackBtn.addEventListener("click",addTrack);
+// ─── Add track ────────────────────────────────────────
+function addTrack() {
+  trackCount++;
+  const id  = "track_" + Date.now();
+  const num = tracksContainer.querySelectorAll(".track-card").length + 1;
 
-function uploadFile(file,type,progressCallback){
+  const div = document.createElement("div");
+  div.className = "track-card";
+  div.dataset.id = id;
 
-return new Promise((resolve)=>{
+  div.innerHTML = `
+    <div class="track-header">
+      <span class="track-num">TRACK ${num}</span>
+      ${num > 1 ? `<button class="remove-track" title="Remove" data-id="${id}">✕</button>` : ''}
+    </div>
 
-const resourceType = type==="image" ? "image" : "video";
-const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
+    <div class="field-row">
+      <div class="field">
+        <label>Track Title *</label>
+        <input type="text" class="TrackTitle" required>
+      </div>
+      <div class="field">
+        <label>Version</label>
+        <input type="text" class="TrackVersion">
+      </div>
+    </div>
 
-const xhr = new XMLHttpRequest();
-xhr.timeout = 0;
+    <div class="field">
+      <label>Audio File *</label>
+      <div class="drop-zone" id="zone_${id}">
+        <input type="file" class="audioFile" accept=".wav,.mp3,.flac,.aiff,.aif" required>
+        <span class="drop-icon">🎵</span>
+        <div class="drop-text">Drop audio file here or click to browse</div>
+        <div class="drop-hint">WAV · MP3 · FLAC · AIFF · Any size</div>
+      </div>
+      <div class="file-chosen" id="chosen_${id}">
+        <span class="chosen-name">—</span>
+        <span class="file-size chosen-size"></span>
+      </div>
+      <div class="upload-progress" id="prog_${id}">
+        <div class="progress-label">
+          <span class="prog-label-text">Uploading…</span>
+          <span class="prog-pct">0%</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="fill_${id}"></div>
+        </div>
+      </div>
+    </div>
+  `;
 
-const formData = new FormData();
-formData.append("file",file);
-formData.append("upload_preset",UPLOAD_PRESET);
-
-xhr.upload.onprogress=(e)=>{
-
-if(e.lengthComputable && progressCallback){
-
-const percent=Math.round((e.loaded/e.total)*100);
-progressCallback(percent);
-
+  tracksContainer.appendChild(div);
+  bindDropZone(div, id);
+  updateTrackNumbers();
 }
 
-};
+// ─── Bind drop zone visuals ───────────────────────────
+function bindDropZone(card, id) {
+  const zone    = document.getElementById("zone_" + id);
+  const input   = card.querySelector(".audioFile");
+  const chosen  = document.getElementById("chosen_" + id);
 
-xhr.onload=()=>{
+  if (!zone || !input) return;
 
-if(xhr.status===200){
+  zone.addEventListener("dragover",  e => { e.preventDefault(); zone.classList.add("dragover"); });
+  zone.addEventListener("dragleave", ()  => zone.classList.remove("dragover"));
+  zone.addEventListener("drop",      e  => { e.preventDefault(); zone.classList.remove("dragover"); });
 
-try{
-
-const res=JSON.parse(xhr.responseText);
-
-resolve(res.secure_url || res.url || null);
-
-}catch{
-
-resolve(null);
-
+  input.addEventListener("change", () => {
+    const f = input.files[0];
+    if (!f) return;
+    chosen.querySelector(".chosen-name").textContent = f.name;
+    chosen.querySelector(".chosen-size").textContent = fmtSize(f.size);
+    chosen.classList.add("show");
+  });
 }
 
-}else{
+// ─── Artwork drop zone ────────────────────────────────
+const artworkInput   = document.getElementById("coverArt");
+const artworkChosen  = document.getElementById("artworkChosen");
+const artworkPreview = document.getElementById("artworkPreview");
+const artworkZone    = document.getElementById("artworkZone");
 
-resolve(null);
+artworkZone.addEventListener("dragover",  e => { e.preventDefault(); artworkZone.classList.add("dragover"); });
+artworkZone.addEventListener("dragleave", ()  => artworkZone.classList.remove("dragover"));
+artworkZone.addEventListener("drop",      e  => { e.preventDefault(); artworkZone.classList.remove("dragover"); });
 
-}
+artworkInput.addEventListener("change", () => {
+  const f = artworkInput.files[0];
+  if (!f) return;
+  document.getElementById("artworkName").textContent = f.name;
+  document.getElementById("artworkSize").textContent = fmtSize(f.size);
+  artworkChosen.classList.add("show");
 
-};
+  const reader = new FileReader();
+  reader.onload = e => {
+    artworkPreview.src = e.target.result;
+    artworkPreview.classList.add("show");
+  };
+  reader.readAsDataURL(f);
 
-xhr.onerror=()=>resolve(null);
-
-xhr.open("POST",url);
-xhr.send(formData);
-
+  setStepDone(3);
+  setStepActive(4);
 });
 
-}
-
-form.addEventListener("submit",async(e)=>{
-
-e.preventDefault();
-
-submitBtn.disabled=true;
-submitBtn.innerText="Uploading Tracks...";
-
-const tracks=document.querySelectorAll(".track");
-
-let trackInfo="";
-
-for(let i=0;i<tracks.length;i++){
-
-const inputs=tracks[i].querySelectorAll("input");
-
-const title=inputs[0].value;
-const version=inputs[1].value;
-const fileInput=tracks[i].querySelector(".audioFile");
-
-if(!fileInput.files[0]){
-
-alert("Audio file missing");
-submitBtn.disabled=false;
-return;
-
-}
-
-const audioUrl=await uploadFile(fileInput.files[0],"audio",(percent)=>{
-
-submitBtn.innerText=`Uploading Track ${i+1}... ${percent}%`;
-
+// ─── Remove track ────────────────────────────────────
+tracksContainer.addEventListener("click", e => {
+  const btn = e.target.closest(".remove-track");
+  if (!btn) return;
+  const id  = btn.dataset.id;
+  const card = document.querySelector(`[data-id="${id}"]`);
+  if (card) { card.remove(); updateTrackNumbers(); }
 });
 
-if(!audioUrl){
-
-alert("Audio upload failed");
-submitBtn.disabled=false;
-return;
-
-}
-
-trackInfo+=`Track ${i+1}:\n`;
-trackInfo+=`Title: ${title}\n`;
-trackInfo+=`Version: ${version || "Original"}\n`;
-trackInfo+=`Audio: ${audioUrl}\n\n`;
-
-}
-
-const coverInput=document.getElementById("coverArt");
-
-if(!coverInput.files[0]){
-
-alert("Cover art missing");
-submitBtn.disabled=false;
-return;
-
-}
-
-const coverUrl=await uploadFile(coverInput.files[0],"image",(percent)=>{
-
-submitBtn.innerText=`Uploading Cover... ${percent}%`;
-
+// ─── Add track button ─────────────────────────────────
+addTrackBtn.addEventListener("click", () => {
+  addTrack();
+  setStepDone(2);
 });
 
-if(!coverUrl){
-
-alert("Cover upload failed");
-submitBtn.disabled=false;
-return;
-
+// ─── Update track numbers ─────────────────────────────
+function updateTrackNumbers() {
+  document.querySelectorAll(".track-card").forEach((c, i) => {
+    const num = c.querySelector(".track-num");
+    if (num) num.textContent = "TRACK " + (i + 1);
+  });
 }
 
-const preview=document.createElement("img");
-preview.src=coverUrl;
-preview.className="preview";
-tracksContainer.appendChild(preview);
+// ─── File size formatter ──────────────────────────────
+function fmtSize(bytes) {
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
+  return (bytes / 1024 / 1024).toFixed(1) + " MB";
+}
 
-const data=new FormData();
+// ─── Show error ───────────────────────────────────────
+function showError(msg) {
+  errorMsg.textContent = "⚠ " + msg;
+  errorMsg.classList.add("show");
+  errorMsg.scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(() => errorMsg.classList.remove("show"), 6000);
+}
 
-data.append("release_type",releaseType.value);
-data.append("tracks",trackInfo);
-data.append("cover_art",coverUrl);
+// ─── Status panel helpers ─────────────────────────────
+function addStatusItem(key, label) {
+  const div = document.createElement("div");
+  div.className = "status-item";
+  div.id = "status_" + key;
+  div.innerHTML = `
+    <div class="status-icon uploading" id="icon_${key}">◌</div>
+    <div class="status-name">${label}</div>
+    <div class="status-pct" id="pct_${key}">0%</div>
+  `;
+  statusList.appendChild(div);
+}
 
-fetch("https://formspree.io/f/mzzrkpqj",{
-method:"POST",
-body:data,
-headers:{'Accept':'application/json'}
-}).catch(()=>{});
+function updateStatus(key, pct) {
+  const pctEl = document.getElementById("pct_" + key);
+  const icon  = document.getElementById("icon_" + key);
+  if (pctEl) pctEl.textContent = pct + "%";
+  if (icon && pct >= 100) {
+    icon.className = "status-icon done";
+    icon.textContent = "✓";
+  }
+}
 
-form.style.display="none";
-document.getElementById("successScreen").style.display="block";
+function failStatus(key) {
+  const icon = document.getElementById("icon_" + key);
+  if (icon) { icon.className = "status-icon error"; icon.textContent = "!"; }
+}
 
+// ─── Upload a single file to Cloudinary ──────────────
+function uploadToCloudinary(file, type, onProgress) {
+  return new Promise((resolve, reject) => {
+    const resourceType = type === "image" ? "image" : "video";
+    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
+
+    const xhr = new XMLHttpRequest();
+    xhr.timeout = 0; // no timeout for large files
+
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", UPLOAD_PRESET);
+
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.min(99, Math.round((e.loaded / e.total) * 100)));
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          onProgress && onProgress(100);
+          resolve(res.secure_url || res.url || null);
+        } catch {
+          reject(new Error("Invalid response"));
+        }
+      } else {
+        reject(new Error("HTTP " + xhr.status));
+      }
+    };
+
+    xhr.onerror   = () => reject(new Error("Network error"));
+    xhr.ontimeout = () => reject(new Error("Timeout"));
+
+    xhr.open("POST", url);
+    xhr.send(fd);
+  });
+}
+
+// ─── Submit ───────────────────────────────────────────
+submitBtn.addEventListener("click", async () => {
+  errorMsg.classList.remove("show");
+
+  // Validate
+  const type = releaseType.value;
+  if (!type) { showError("Please select a release type."); return; }
+
+  const cards = document.querySelectorAll(".track-card");
+  if (cards.length === 0) { showError("Add at least one track."); return; }
+
+  const cover = artworkInput.files[0];
+  if (!cover) { showError("Please select cover artwork."); return; }
+
+  for (let i = 0; i < cards.length; i++) {
+    const title = cards[i].querySelector(".trackTitle").value.trim();
+    const audio = cards[i].querySelector(".audioFile").files[0];
+    if (!title) { showError(`Track ${i+1}: please enter a title.`); return; }
+    if (!audio) { showError(`Track ${i+1}: please attach an audio file.`); return; }
+  }
+
+  // Lock UI
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Uploading…";
+
+  // Show status panel
+  statusList.innerHTML = "";
+  globalStatus.classList.add("show");
+
+  // Build status items
+  cards.forEach((c, i) => {
+    const title = c.querySelector(".trackTitle").value.trim();
+    addStatusItem("track" + i, `Track ${i+1} — ${title}`);
+  });
+  addStatusItem("cover", "Cover Artwork");
+
+  // Upload tracks sequentially (avoids memory spikes)
+  const trackResults = [];
+  for (let i = 0; i < cards.length; i++) {
+    const audio = cards[i].querySelector(".audioFile").files[0];
+    const key   = "track" + i;
+    let url;
+    try {
+      url = await uploadToCloudinary(audio, "audio", pct => updateStatus(key, pct));
+    } catch (err) {
+      failStatus(key);
+      showError(`Track ${i+1} upload failed — ${err.message}. Please retry.`);
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Send Release to Funk Universe 🚀";
+      return;
+    }
+    const title   = cards[i].querySelector(".trackTitle").value.trim();
+    const version = cards[i].querySelector(".trackVersion").value.trim();
+    trackResults.push({ index: i+1, title, version: version || "Original", url });
+  }
+
+  // Upload cover
+  let coverUrl;
+  try {
+    coverUrl = await uploadToCloudinary(cover, "image", pct => updateStatus("cover", pct));
+  } catch (err) {
+    failStatus("cover");
+    showError("Cover artwork upload failed — " + err.message);
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Send Release to Funk Universe 🚀";
+    return;
+  }
+
+  // Build Formspree payload
+  const tracksText = trackResults
+    .map(t => `Track ${t.index}: ${t.title} [${t.version}]\n${t.url}`)
+    .join("\n\n");
+
+  const fd = new FormData();
+  fd.append("release_type", type);
+  fd.append("tracks",       tracksText);
+  fd.append("cover_art",    coverUrl);
+
+  try {
+    await fetch(FORMSPREE, {
+      method:  "POST",
+      body:    fd,
+      headers: { Accept: "application/json" }
+    });
+  } catch {
+    // Formspree failure is non-fatal — files are uploaded
+  }
+
+  // Show success
+  document.getElementById("mainForm").style.display  = "none";
+  document.getElementById("successScreen").style.display = "block";
+  document.querySelector("footer").style.display = "none";
 });
 </script>
-
 </body>
 </html>
